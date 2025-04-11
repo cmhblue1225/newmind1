@@ -2,6 +2,12 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import analyzeRouter from './routes/analyze.js';
+import feedbackRouter from './routes/feedback.js';
+import chatRouter from './routes/chat.js';
+app.use('/api/chat', chatRouter);
+
+app.use('/api/feedback', feedbackRouter);
+
 // import musicRouter from './routes/music.js'; // 향후 추가 가능
 // import chatRouter from './routes/chat.js';   // 향후 추가 가능
 

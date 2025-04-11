@@ -1,23 +1,169 @@
-<!-- client/chat.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AI 감정 상담</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f8f9fa;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    .chat-box {
+      background: white;
+      border-radius: 10px;
+      padding: 1rem;
+      height: 400px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+    }
+
+    .message {
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+      border-radius: 6px;
+      max-width: 90%;
+    }
+
+    .user {
+      background: #e3fafc;
+      align-self: flex-end;
+      text-align: right;
+    }
+
+    .gpt {
+      background: #f1f3f5;
+      align-self: flex-start;
+    }
+
+    #typing {
+      font-style: italic;
+      color: gray;
+    }
+
+    #input-form {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    input {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      background: #339af0;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <header><h2>AI 감정 상담</h2></header>
+  <h1>🧠 AI 감정 상담</h1>
 
-  <section id="chat-box"></section>
+  <div class="chat-box" id="chat"></div>
+  <p id="typing" style="display:none">GPT가 입력 중...</p>
 
-  <div id="typing-indicator" style="display:none;">GPT가 입력 중입니다...</div>
-
-  <form id="chat-form">
-    <input type="text" id="user-input" placeholder="내용을 입력하세요..." autocomplete="off" />
-    <button type="submit">전송</button>
+  <form id="input-form">
+    <input type="text" id="message" placeholder="상담 내용을 입력하세요..." />
+    <button type="submit">보내기</button>
   </form>
 
-  <script src="js/chat.js"></script>
+  <script type="module">
+    import { supabase } from './js/supabase.js';
+    import { checkAuth } from './js/auth.js';
+
+    checkAuth();
+
+    const params = new URLSearchParams(location.search);
+    const diaryId = params.get('id');
+    const chatBox = document.getElementById('chat');
+    const input = document.getElementById('message');
+    const form = document.getElementById('input-form');
+    const typing = document.getElementById('typing');
+
+    const renderUrl = 'https://emotion-gpt-api.onrender.com'; // ← Render 주소 입력
+
+    let conversation = [];
+
+    // 초기 상담 시작
+    async function startChat() {
+      const { data, error } = await supabase.from('diaries').select('*').eq('id', diaryId).single();
+      if (error || !data) return alert('일기를 불러올 수 없습니다.');
+
+      const prompt = `사용자의 일기 내용은 다음과 같습니다:\n\n"${data.content}"\n\n이 내용을 바탕으로 부드럽게 상담을 시작해주세요.`;
+
+      addMessage('gpt', '일기 내용을 분석 중입니다...');
+
+      const res = await fetch(`${renderUrl}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
+      });
+
+      const dataJson = await res.json();
+      if (dataJson.reply) {
+        updateLastMessage(dataJson.reply);
+        conversation.push({ role: 'user', content: prompt });
+        conversation.push({ role: 'assistant', content: dataJson.reply });
+      }
+    }
+
+    // 사용자 메시지 전송
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      addMessage('user', msg);
+      conversation.push({ role: 'user', content: msg });
+      input.value = '';
+      showTyping();
+
+      const res = await fetch(`${renderUrl}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: conversation })
+      });
+
+      const dataJson = await res.json();
+      hideTyping();
+      addMessage('gpt', dataJson.reply);
+      conversation.push({ role: 'assistant', content: dataJson.reply });
+    });
+
+    function addMessage(sender, text) {
+      const div = document.createElement('div');
+      div.className = `message ${sender}`;
+      div.innerText = text;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function updateLastMessage(text) {
+      const last = document.querySelector('.message.gpt:last-child');
+      if (last) last.innerText = text;
+    }
+
+    function showTyping() {
+      typing.style.display = 'block';
+    }
+
+    function hideTyping() {
+      typing.style.display = 'none';
+    }
+
+    startChat();
+  </script>
 </body>
 </html>

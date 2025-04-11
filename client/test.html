@@ -10,7 +10,7 @@
   <script>
     document.getElementById('analyze').onclick = async () => {
       const content = document.getElementById('content').value;
-      const res = await fetch('https://https://emotion-gpt-api.onrender.com/api/analyze-emotion', {
+      const res = await fetch('https://emotion-gpt-api.onrender.com/api/analyze-emotion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content })

@@ -1,24 +1,158 @@
-<!-- client/write-diary.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>일기 쓰기</title>
-  <script type="module" src="./js/write-diary.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>일기 작성</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    textarea, select, button {
+      width: 100%;
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+
+    #gpt-feedback {
+      background-color: #f1f3f5;
+      padding: 1rem;
+      border-radius: 8px;
+    }
+
+    button {
+      background-color: #228be6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #1971c2;
+    }
+
+    h2 {
+      margin-top: 2rem;
+    }
+  </style>
 </head>
 <body>
-  <h2>오늘의 감정을 선택하세요</h2>
-  <select id="emotion">
-    <option value="happy">😊 행복</option>
-    <option value="sad">😢 슬픔</option>
-    <option value="angry">😠 화남</option>
-    <option value="anxious">😟 불안</option>
-    <option value="neutral">😐 보통</option>
-  </select>
+  <h1>오늘의 감정 일기</h1>
 
-  <h2>일기 내용</h2>
-  <textarea id="content" rows="8" cols="40" placeholder="오늘 하루는 어땠나요?"></textarea>
+  <form id="diary-form">
+    <label for="content">일기 내용</label>
+    <textarea id="content" rows="8" placeholder="오늘 하루를 자유롭게 적어보세요..."></textarea>
 
-  <button id="submit-diary">저장하기</button>
+    <label for="emotion">감정 선택</label>
+    <select id="emotion">
+      <option value="">-- 감정을 선택하세요 --</option>
+      <option value="happy">😊 행복</option>
+      <option value="sad">😢 슬픔</option>
+      <option value="angry">😠 분노</option>
+      <option value="anxious">😟 불안</option>
+      <option value="neutral">😐 보통</option>
+    </select>
+
+    <button type="button" id="analyze-btn">✍️ 감정 자동 분석</button>
+    <button type="button" id="feedback-btn">💬 GPT 피드백 받기</button>
+    <button type="submit">📌 일기 저장</button>
+  </form>
+
+  <h2>GPT 분석 결과</h2>
+  <div id="gpt-feedback"></div>
+
+  <script type="module">
+    import { supabase } from './js/supabase.js';
+    import { checkAuth } from './js/auth.js';
+
+    checkAuth();
+
+    const form = document.getElementById('diary-form');
+    const emotionSelect = document.getElementById('emotion');
+    const contentInput = document.getElementById('content');
+    const feedbackBox = document.getElementById('gpt-feedback');
+
+    const renderUrl = 'https://emotion-gpt-api.onrender.com'; // ← 여기에 실제 Render 주소 입력
+
+    // 감정 자동 분석
+    document.getElementById('analyze-btn').addEventListener('click', async () => {
+      const content = contentInput.value.trim();
+      if (!content) return alert('일기를 먼저 입력해주세요.');
+
+      const res = await fetch(`${renderUrl}/api/analyze-emotion`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+      });
+
+      const data = await res.json();
+      if (data.emotion) {
+        emotionSelect.value = data.emotion;
+        feedbackBox.innerHTML = `<p>GPT 감정 분석 결과: <strong>${data.emotion}</strong></p>`;
+      } else {
+        feedbackBox.innerHTML = '<p>감정 분석 실패</p>';
+      }
+    });
+
+    // GPT 피드백 + 음악 추천
+    document.getElementById('feedback-btn').addEventListener('click', async () => {
+      const content = contentInput.value.trim();
+      if (!content) return alert('일기를 먼저 입력해주세요.');
+
+      const res = await fetch(`${renderUrl}/api/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+      });
+
+      const data = await res.json();
+
+      if (data.emotion) emotionSelect.value = data.emotion;
+
+      if (data.feedback || data.music) {
+        feedbackBox.innerHTML = `
+          <p><strong>감정:</strong> ${data.emotion}</p>
+          <p><strong>피드백:</strong> ${data.feedback}</p>
+          <p><a href="${data.music}" target="_blank">🎵 GPT 음악 추천 듣기</a></p>
+        `;
+      } else {
+        feedbackBox.innerHTML = '<p>GPT 피드백을 가져오지 못했습니다.</p>';
+      }
+    });
+
+    // 일기 저장
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const content = contentInput.value.trim();
+      const emotion = emotionSelect.value;
+
+      if (!content || !emotion) {
+        alert('일기 내용과 감정을 모두 입력해주세요.');
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const { error } = await supabase.from('diaries').insert({
+        user_id: user.id,
+        content,
+        emotion
+      });
+
+      if (error) {
+        alert('일기 저장 실패: ' + error.message);
+      } else {
+        alert('일기가 저장되었습니다!');
+        location.href = 'my-diary.html';
+      }
+    });
+  </script>
 </body>
 </html>
