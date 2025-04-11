@@ -1,0 +1,23 @@
+<!-- client/chat.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI 감정 상담</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header><h2>AI 감정 상담</h2></header>
+
+  <section id="chat-box"></section>
+
+  <div id="typing-indicator" style="display:none;">GPT가 입력 중입니다...</div>
+
+  <form id="chat-form">
+    <input type="text" id="user-input" placeholder="내용을 입력하세요..." autocomplete="off" />
+    <button type="submit">전송</button>
+  </form>
+
+  <script src="js/chat.js"></script>
+</body>
+</html>

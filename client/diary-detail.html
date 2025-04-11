@@ -1,0 +1,25 @@
+<!-- client/diary-detail.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>일기 상세</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header><h2>일기 상세</h2></header>
+
+  <section id="diary-detail">
+    <h3 id="diary-title">제목</h3>
+    <p id="diary-content">내용 로딩 중...</p>
+    <div id="diary-meta">감정: <span id="emotion-tag"></span></div>
+  </section>
+
+  <section id="diary-actions">
+    <button onclick="deleteDiary()">삭제</button>
+    <button onclick="startCounseling()">이 일기로 상담하기</button>
+  </section>
+
+  <script src="js/diary-detail.js"></script>
+</body>
+</html>

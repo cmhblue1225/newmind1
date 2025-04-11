@@ -1,0 +1,24 @@
+<!-- client/write-diary.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>일기 쓰기</title>
+  <script type="module" src="./js/write-diary.js"></script>
+</head>
+<body>
+  <h2>오늘의 감정을 선택하세요</h2>
+  <select id="emotion">
+    <option value="happy">😊 행복</option>
+    <option value="sad">😢 슬픔</option>
+    <option value="angry">😠 화남</option>
+    <option value="anxious">😟 불안</option>
+    <option value="neutral">😐 보통</option>
+  </select>
+
+  <h2>일기 내용</h2>
+  <textarea id="content" rows="8" cols="40" placeholder="오늘 하루는 어땠나요?"></textarea>
+
+  <button id="submit-diary">저장하기</button>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!-- client/community.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>커뮤니티</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header><h2>익명 일기 커뮤니티</h2></header>
+
+  <section id="community-filter">
+    <input type="text" placeholder="일기 검색..." id="searchInput" />
+    <select id="emotionFilter">
+      <option value="">모든 감정</option>
+      <option value="happy">행복</option>
+      <option value="joyful">즐거움</option>
+      <option value="neutral">보통</option>
+      <option value="sad">슬픔</option>
+      <option value="angry">화남</option>
+    </select>
+  </section>
+
+  <section id="community-list"></section>
+
+  <script src="js/community.js"></script>
+</body>
+</html>

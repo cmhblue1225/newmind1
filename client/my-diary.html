@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>내 일기</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="module" src="js/checkAuth.js"></script>
+  <script type="module" src="js/my-diary.js" defer></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 1rem;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .diary-card {
+      border: 1px solid #ccc;
+      border-left: 8px solid;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .diary-card h3 {
+      margin: 0 0 0.5rem 0;
+    }
+
+    .diary-card .date {
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    .filter-bar {
+      margin-bottom: 1.5rem;
+    }
+
+    .logout-btn {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .delete-btn {
+      background-color: #ddd;
+      border: none;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.8rem;
+      border-radius: 5px;
+      cursor: pointer;
+      float: right;
+    }
+
+    .color-happy { border-color: #fadb14; }
+    .color-sad { border-color: #1890ff; }
+    .color-angry { border-color: #ff4d4f; }
+    .color-anxious { border-color: #9254de; }
+    .color-neutral { border-color: #d9d9d9; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>내 감정 일기</h1>
+    <button class="logout-btn" id="logout-btn">로그아웃</button>
+  </header>
+
+  <div class="filter-bar">
+    <label for="emotion-filter">감정 필터:</label>
+    <select id="emotion-filter">
+      <option value="all">전체</option>
+      <option value="happy">행복</option>
+      <option value="sad">슬픔</option>
+      <option value="angry">분노</option>
+      <option value="anxious">불안</option>
+      <option value="neutral">중립</option>
+    </select>
+  </div>
+
+  <div id="diary-list"></div>
+</body>
+</html>
