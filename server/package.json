@@ -1,6 +1,7 @@
 {
   "name": "newemotion-server",
   "version": "1.0.0",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
@@ -10,5 +11,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "openai": "^4.0.0"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
