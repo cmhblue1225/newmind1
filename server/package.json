@@ -1,14 +1,14 @@
 {
   "name": "newemotion-server",
   "version": "1.0.0",
-  "main": "index.js",               // index.js가 시작 파일일 경우
+  "main": "index.js",
   "scripts": {
-    "start": "node index.js"        // server.js가 아니라면 여기 고쳐야 함!
+    "start": "node index.js"
   },
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.3.1",
     "openai": "^4.0.0"
   }
 }
