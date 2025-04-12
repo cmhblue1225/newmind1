@@ -5,14 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>일기 상세 보기</title>
   <style>
-    body { font-family: sans-serif; padding: 2rem; max-width: 700px; margin: auto; }
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 700px;
+      margin: auto;
+    }
+
+    .back-btn {
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      background: transparent;
+      border: none;
+      color: #339af0;
+      cursor: pointer;
+      padding: 0;
+    }
+
     .diary-box {
       background: #f8f9fa;
       padding: 1rem;
       border-radius: 10px;
       margin-bottom: 1.5rem;
     }
+
     .label { font-weight: bold; }
+
     .chat-btn {
       padding: 0.7rem 1rem;
       font-size: 1rem;
@@ -25,6 +43,9 @@
   </style>
 </head>
 <body>
+  <!-- ✅ 뒤로가기 버튼 추가 -->
+  <button class="back-btn" onclick="history.back()">← 뒤로가기</button>
+
   <h1>📝 일기 상세 보기</h1>
 
   <div class="diary-box">
@@ -79,13 +100,11 @@
       }
     }
 
-    // 상담 버튼
     document.getElementById('chat-btn').addEventListener('click', () => {
       location.href = `chat.html?id=${diaryId}`;
     });
 
     loadDiary();
   </script>
-  
 </body>
 </html>

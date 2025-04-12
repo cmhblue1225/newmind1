@@ -1,10 +1,14 @@
 import { supabase } from './supabase.js';
+import { checkAuth } from './auth.js';
+import { insertBottomNav } from './components/nav.js';
+
+checkAuth();
+insertBottomNav();
 
 const diaryList = document.getElementById('diary-list');
 const emotionFilter = document.getElementById('emotion-filter');
 const logoutBtn = document.getElementById('logout-btn');
 
-// 감정 매핑
 const emotionMap = {
   happy: '행복',
   sad: '슬픔',
@@ -13,7 +17,6 @@ const emotionMap = {
   neutral: '중립'
 };
 
-// 감정 색상 클래스
 const colorClassMap = {
   happy: 'color-happy',
   sad: 'color-sad',
@@ -25,10 +28,13 @@ const colorClassMap = {
 let diaries = [];
 
 async function fetchDiaries() {
+  const { data: { user } } = await supabase.auth.getUser();
+
   const { data, error } = await supabase
     .from('diaries')
     .select('*')
-    .order('created_at', { ascending: false });
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false }); // ✅ 최신순 정렬
 
   if (error) {
     alert('일기 불러오기 실패: ' + error.message);
@@ -65,12 +71,12 @@ function renderDiaries() {
       <h3>${emotionText} 일기</h3>
       <div class="date">${date}</div>
       <p>${diary.content}</p>
+      <button onclick="location.href='diary-detail.html?id=${diary.id}'">상세보기</button>
     `;
 
     diaryList.appendChild(card);
   });
 
-  // 삭제 버튼 연결
   document.querySelectorAll('.delete-btn').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const id = btn.dataset.id;
@@ -83,7 +89,7 @@ function renderDiaries() {
         if (error) {
           alert('삭제 실패: ' + error.message);
         } else {
-          diaries = diaries.filter((d) => d.id !== parseInt(id));
+          diaries = diaries.filter((d) => d.id !== id);
           renderDiaries();
         }
       }
@@ -95,7 +101,6 @@ emotionFilter.addEventListener('change', renderDiaries);
 
 logoutBtn.addEventListener('click', async () => {
   await supabase.auth.signOut();
-  localStorage.removeItem('supabase_token');
   location.href = 'login.html';
 });
 

@@ -11,7 +11,17 @@
       padding: 2rem;
       max-width: 600px;
       margin: auto;
-      padding-bottom: 80px; /* 네비게이션 바 공간 확보 */
+      padding-bottom: 80px;
+    }
+
+    .back-btn {
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      background: transparent;
+      border: none;
+      color: #339af0;
+      cursor: pointer;
+      padding: 0;
     }
 
     .chat-box {
@@ -72,7 +82,7 @@
       cursor: pointer;
     }
 
-    /* ✅ 하단 네비게이션 스타일 */
+    /* ✅ 네비게이션 스타일 */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -109,6 +119,9 @@
   </style>
 </head>
 <body>
+  <!-- ✅ 뒤로가기 버튼 -->
+  <button class="back-btn" onclick="history.back()">← 뒤로가기</button>
+
   <h1>🧠 AI 감정 상담</h1>
 
   <div class="chat-box" id="chat"></div>
@@ -125,7 +138,7 @@
     import { insertBottomNav } from './js/components/nav.js';
 
     checkAuth();
-    insertBottomNav(); // ✅ 네비게이션 바 삽입
+    insertBottomNav(); // ✅ 네비게이션 삽입
 
     const params = new URLSearchParams(location.search);
     const diaryId = params.get('id');
@@ -134,8 +147,7 @@
     const form = document.getElementById('input-form');
     const typing = document.getElementById('typing');
 
-    const renderUrl = 'https://emotion-gpt-api.onrender.com'; // ← Render 서버 주소
-
+    const renderUrl = 'https://emotion-gpt-api.onrender.com';
     let conversation = [];
     let typingInterval = null;
 
@@ -240,7 +252,6 @@
       conversation.push({ role: 'assistant', content: dataJson.reply });
     });
 
-    // 시작 시 실행
     await loadPreviousMessages();
     await startChat();
   </script>

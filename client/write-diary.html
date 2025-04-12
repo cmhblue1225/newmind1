@@ -91,6 +91,9 @@
     <label for="content">일기 내용</label>
     <textarea id="content" rows="8" placeholder="오늘 하루를 자유롭게 적어보세요..."></textarea>
 
+    <!-- 감정 선택 아래 → 위로 이동된 자동 분석 버튼 -->
+    <button type="button" id="analyze-btn">✍️ 감정 자동 분석</button>
+
     <label for="emotion">감정 선택</label>
     <select id="emotion">
       <option value="">-- 감정을 선택하세요 --</option>
@@ -101,7 +104,6 @@
       <option value="neutral">😐 보통</option>
     </select>
 
-    <button type="button" id="analyze-btn">✍️ 감정 자동 분석</button>
     <button type="button" id="feedback-btn">💬 GPT 피드백 받기</button>
 
     <label>
@@ -121,16 +123,15 @@
     import { insertBottomNav } from './js/components/nav.js';
 
     checkAuth();
-    insertBottomNav(); // ✅ 네비게이션 바 삽입
+    insertBottomNav();
 
     const form = document.getElementById('diary-form');
     const emotionSelect = document.getElementById('emotion');
     const contentInput = document.getElementById('content');
     const feedbackBox = document.getElementById('gpt-feedback');
-
     const renderUrl = 'https://emotion-gpt-api.onrender.com';
 
-    // 감정 자동 분석
+    // 감정 자동 분석 버튼
     document.getElementById('analyze-btn').addEventListener('click', async () => {
       const content = contentInput.value.trim();
       if (!content) return alert('일기를 먼저 입력해주세요.');
@@ -150,7 +151,7 @@
       }
     });
 
-    // GPT 피드백 + 음악 추천
+    // GPT 피드백 버튼 (감정 선택은 변경하지 않음)
     document.getElementById('feedback-btn').addEventListener('click', async () => {
       const content = contentInput.value.trim();
       if (!content) return alert('일기를 먼저 입력해주세요.');
@@ -163,11 +164,9 @@
 
       const data = await res.json();
 
-      if (data.emotion) emotionSelect.value = data.emotion;
-
       if (data.feedback || data.music) {
         feedbackBox.innerHTML = `
-          <p><strong>감정:</strong> ${data.emotion}</p>
+          <p><strong>GPT 분석 감정:</strong> ${data.emotion}</p>
           <p><strong>피드백:</strong> ${data.feedback}</p>
           <p><a href="${data.music}" target="_blank">🎵 GPT 음악 추천 듣기</a></p>
         `;
@@ -176,7 +175,7 @@
       }
     });
 
-    // 일기 저장 + 공유 + 알림 처리
+    // 일기 저장
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 

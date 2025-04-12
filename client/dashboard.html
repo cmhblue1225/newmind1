@@ -29,10 +29,15 @@
     .diary-entry {
       border-bottom: 1px solid #eee;
       padding: 0.5rem 0;
+      cursor: pointer;
     }
 
     .diary-entry:last-child {
       border-bottom: none;
+    }
+
+    .diary-entry:hover {
+      background-color: #f1f3f5;
     }
 
     .buttons {
@@ -82,8 +87,10 @@
   <script type="module">
     import { supabase } from './js/supabase.js';
     import { checkAuth } from './js/auth.js';
+    import { insertBottomNav } from './js/components/nav.js';
 
     checkAuth();
+    insertBottomNav();
 
     async function loadDashboard() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -91,7 +98,7 @@
       // 최근 내 일기
       const { data: myDiaries } = await supabase
         .from('diaries')
-        .select('content, created_at')
+        .select('id, content, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(3);
@@ -99,7 +106,7 @@
       const myEl = document.getElementById('my-diaries');
       myEl.innerHTML = myDiaries.length === 0 ? '작성된 일기가 없습니다.' :
         myDiaries.map(d => `
-          <div class="diary-entry">
+          <div class="diary-entry" onclick="location.href='diary-detail.html?id=${d.id}'">
             <div><strong>${new Date(d.created_at).toLocaleDateString()}</strong></div>
             <div>${d.content.slice(0, 80)}...</div>
           </div>
@@ -108,20 +115,20 @@
       // 인기 공유 일기
       const { data: shared } = await supabase
         .from('shared_diaries')
-        .select('content, likes, created_at')
+        .select('diary_id, content, likes, created_at')
         .order('likes', { ascending: false })
         .limit(3);
 
       const sharedEl = document.getElementById('shared-diaries');
       sharedEl.innerHTML = shared.length === 0 ? '공유된 일기가 없습니다.' :
         shared.map(d => `
-          <div class="diary-entry">
+          <div class="diary-entry" onclick="location.href='diary-detail.html?id=${d.diary_id}'">
             <div><strong>❤️ ${d.likes} · ${new Date(d.created_at).toLocaleDateString()}</strong></div>
             <div>${d.content.slice(0, 80)}...</div>
           </div>
         `).join('');
 
-      // GPT 주간 요약
+      // GPT 요약
       const { data: emotions } = await supabase
         .from('diaries')
         .select('emotion, created_at')
