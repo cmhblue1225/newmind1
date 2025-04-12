@@ -6,21 +6,55 @@
   <title>감정 통계</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      padding-bottom: 100px;
+      max-width: 800px;
+      margin: auto;
+      font-family: sans-serif;
+      background-color: #f8f9fa;
+    }
+
+    h1, h2 {
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    #gpt-summary {
+      background: #fff3bf;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 1.5rem;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: auto !important;
+      max-height: 400px;
+      margin: 1.5rem 0;
+    }
+
+    #no-data {
+      text-align: center;
+      margin-top: 2rem;
+      color: gray;
+    }
+  </style>
 </head>
 <body>
   <h1>📊 내 감정 통계</h1>
 
-  <div id="no-data" style="text-align:center; color: gray; margin: 2rem 0;">일기 데이터가 없습니다.</div>
-  <canvas id="emotionChart" style="display: none;" width="400" height="400"></canvas>
+  <div id="no-data" style="display: none;">일기 데이터가 없습니다.</div>
+  <canvas id="emotionChart" style="display: none;"></canvas>
 
   <h2>📈 날짜별 감정 흐름</h2>
-  <canvas id="emotionTrendChart" width="400" height="300"></canvas>
+  <canvas id="emotionTrendChart"></canvas>
 
   <h2>📅 요일별 감정 추이</h2>
-  <canvas id="weeklyEmotionChart" width="400" height="300"></canvas>
+  <canvas id="weeklyEmotionChart"></canvas>
 
   <h2>🧠 GPT 감정 주간 분석</h2>
-  <div id="gpt-summary" style="background: #fff3bf; padding: 1rem; border-radius: 10px; margin: 1rem 0;"></div>
+  <div id="gpt-summary"></div>
 
   <script type="module">
     import { supabase } from './js/supabase.js';
@@ -30,7 +64,14 @@
     checkAuth();
     insertBottomNav();
 
-    const emotionScores = { happy: 2, neutral: 1, anxious: 0, sad: -1, angry: -2 };
+    const emotionScores = {
+      happy: 2,
+      neutral: 1,
+      anxious: 0,
+      sad: -1,
+      angry: -2
+    };
+
     const weekDays = ['월', '화', '수', '목', '금', '토', '일'];
 
     async function loadStats() {
@@ -46,8 +87,6 @@
         return;
       }
 
-      document.getElementById('no-data').style.display = 'none';
-
       const emotionCounts = { happy: 0, sad: 0, angry: 0, anxious: 0, neutral: 0 };
       data.forEach(entry => {
         if (emotionCounts[entry.emotion] !== undefined) {
@@ -55,9 +94,13 @@
         }
       });
 
-      const chartLabels = Object.keys(emotionCounts).map(e => {
-        return { happy: '😊 행복', sad: '😢 슬픔', angry: '😠 분노', anxious: '😟 불안', neutral: '😐 보통' }[e];
-      });
+      const chartLabels = Object.keys(emotionCounts).map(e => ({
+        happy: '😊 행복',
+        sad: '😢 슬픔',
+        angry: '😠 분노',
+        anxious: '😟 불안',
+        neutral: '😐 보통'
+      }[e]));
 
       const chartData = Object.values(emotionCounts);
 
@@ -74,6 +117,7 @@
           }]
         },
         options: {
+          responsive: true,
           plugins: {
             legend: { position: 'bottom' },
             title: { display: true, text: '감정별 비율' }
@@ -81,7 +125,6 @@
         }
       });
 
-      // 날짜별 감정 흐름
       const dateMap = {};
       const weekMap = { 월: [], 화: [], 수: [], 목: [], 금: [], 토: [], 일: [] };
 
@@ -117,6 +160,7 @@
           }]
         },
         options: {
+          responsive: true,
           scales: {
             y: { suggestedMin: -2, suggestedMax: 2 }
           }
@@ -141,6 +185,7 @@
           }]
         },
         options: {
+          responsive: true,
           scales: {
             y: { suggestedMin: -2, suggestedMax: 2 }
           }
