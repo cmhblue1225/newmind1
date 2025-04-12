@@ -34,7 +34,7 @@ router.post('/', async (req, res) => {
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: '일기를 분석하고 응원과 음악을 추천하는 AI입니다.' },
+        { role: 'system', content: '일기를 분석하고 응원과 음악을 추천하는 따뜻하게 말하는 상담사AI입니다.' },
         { role: 'user', content: prompt }
       ]
     });

@@ -1,28 +1,143 @@
-<!-- client/community.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>커뮤니티</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>공유 일기 커뮤니티</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+      background-color: #f8f9fa;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .filter-buttons {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .filter-buttons button {
+      margin: 0.25rem;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      background-color: #dee2e6;
+      cursor: pointer;
+    }
+
+    .filter-buttons button.active {
+      background-color: #339af0;
+      color: white;
+    }
+
+    .diary-card {
+      background-color: white;
+      border: 1px solid #ced4da;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .emotion-tag {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+
+    .music-btn {
+      margin-top: 0.5rem;
+      display: inline-block;
+      background: #74c0fc;
+      padding: 0.4rem 0.7rem;
+      border-radius: 6px;
+      color: white;
+      text-decoration: none;
+    }
+
+    .music-btn:hover {
+      background: #339af0;
+    }
+  </style>
 </head>
 <body>
-  <header><h2>익명 일기 커뮤니티</h2></header>
+  <h1>📘 익명 일기 커뮤니티</h1>
 
-  <section id="community-filter">
-    <input type="text" placeholder="일기 검색..." id="searchInput" />
-    <select id="emotionFilter">
-      <option value="">모든 감정</option>
-      <option value="happy">행복</option>
-      <option value="joyful">즐거움</option>
-      <option value="neutral">보통</option>
-      <option value="sad">슬픔</option>
-      <option value="angry">화남</option>
-    </select>
-  </section>
+  <div class="filter-buttons">
+    <button data-emotion="all" class="active">전체</button>
+    <button data-emotion="happy">😊 행복</button>
+    <button data-emotion="sad">😢 슬픔</button>
+    <button data-emotion="angry">😠 분노</button>
+    <button data-emotion="anxious">😟 불안</button>
+    <button data-emotion="neutral">😐 보통</button>
+  </div>
 
-  <section id="community-list"></section>
+  <div id="diary-list"></div>
 
-  <script src="js/community.js"></script>
+  <script type="module">
+    import { supabase } from './js/supabase.js';
+    import { checkAuth } from './js/auth.js';
+
+    checkAuth();
+
+    const diaryList = document.getElementById('diary-list');
+    const buttons = document.querySelectorAll('.filter-buttons button');
+    let sharedDiaries = [];
+
+    async function loadSharedDiaries() {
+      const { data, error } = await supabase
+        .from('shared_diaries')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        diaryList.innerHTML = '<p>일기를 불러오는 중 오류가 발생했습니다.</p>';
+        return;
+      }
+
+      sharedDiaries = data;
+      renderDiaries('all');
+    }
+
+    function renderDiaries(filter) {
+      diaryList.innerHTML = '';
+
+      const filtered = filter === 'all'
+        ? sharedDiaries
+        : sharedDiaries.filter(d => d.emotion === filter);
+
+      if (filtered.length === 0) {
+        diaryList.innerHTML = '<p>해당 감정의 일기가 없습니다.</p>';
+        return;
+      }
+
+      filtered.forEach(entry => {
+        const card = document.createElement('div');
+        card.className = 'diary-card';
+        card.innerHTML = `
+          <div class="emotion-tag">감정: ${entry.emotion}</div>
+          <p>${entry.content}</p>
+          <p><strong>GPT 피드백:</strong> ${entry.feedback}</p>
+          <a href="${entry.music}" target="_blank" class="music-btn">🎵 음악 듣기</a>
+        `;
+        diaryList.appendChild(card);
+      });
+    }
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const emotion = btn.dataset.emotion;
+        renderDiaries(emotion);
+      });
+    });
+
+    loadSharedDiaries();
+  </script>
 </body>
 </html>
