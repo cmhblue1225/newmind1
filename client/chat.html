@@ -4,156 +4,113 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AI 감정 상담</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
   <style>
     body {
-      font-family: 'Noto Sans KR', sans-serif;
-      background: #f8f9fa;
-      padding: 0;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
+      font-family: sans-serif;
+      background-color: #f8f9fa;
+      padding: 2rem;
+      padding-bottom: 100px;
+      max-width: 800px;
+      margin: auto;
     }
 
-    header {
-      padding: 1rem;
-      background-color: #228be6;
-      color: white;
+    h1 {
       text-align: center;
-      font-size: 1.3rem;
-      font-weight: bold;
+      margin-bottom: 1rem;
     }
 
     .chat-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 1rem;
-      overflow: hidden;
-    }
-
-    .chat-box {
-      flex: 1;
-      overflow-y: auto;
-      background: #ffffff;
+      background: #fff;
       border-radius: 10px;
-      padding: 1rem;
       border: 1px solid #ccc;
-      margin-bottom: 0.8rem;
+      padding: 1rem;
+      height: 400px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
     }
 
     .message {
-      padding: 0.6rem 0.8rem;
-      margin-bottom: 0.6rem;
+      margin-bottom: 1rem;
+      padding: 0.7rem 1rem;
       border-radius: 10px;
       max-width: 80%;
-      word-wrap: break-word;
+      word-break: break-word;
     }
 
     .user {
-      background-color: #d0ebff;
+      background: #e3fafc;
       align-self: flex-end;
-      margin-left: auto;
       text-align: right;
+      margin-left: auto;
     }
 
     .gpt {
-      background-color: #f1f3f5;
+      background: #f1f3f5;
       align-self: flex-start;
+      text-align: left;
       margin-right: auto;
     }
 
     #typing {
       font-style: italic;
       color: gray;
-      padding-left: 0.5rem;
+      text-align: center;
+      margin-bottom: 1rem;
     }
 
-    #input-form {
+    form {
       display: flex;
       gap: 0.5rem;
-      padding: 0.5rem 1rem;
-      border-top: 1px solid #dee2e6;
-      background: #fff;
+      align-items: center;
     }
 
-    #input-form input {
+    input[type="text"] {
       flex: 1;
-      padding: 0.6rem 0.8rem;
+      padding: 0.6rem;
+      font-size: 1rem;
       border: 1px solid #ccc;
-      border-radius: 6px;
+      border-radius: 8px;
     }
 
-    #input-form button {
-      padding: 0.6rem 1rem;
-      background: #228be6;
+    button {
+      padding: 0.6rem 1.2rem;
+      background-color: #228be6;
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
     }
 
-    #input-form button:hover {
-      background-color: #1c7ed6;
+    button:hover {
+      background-color: #1864ab;
     }
 
     .back-btn {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      cursor: pointer;
-      color: white;
-    }
-
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: #ffffff;
-      border-top: 1px solid #ccc;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      padding: 0.6rem 0;
-      z-index: 1000;
-      box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
-    }
-
-    .bottom-nav a {
-      flex: 1;
-      text-align: center;
-      text-decoration: none;
-      font-size: 1.7rem;
-      color: #333;
-      transition: color 0.2s ease;
-    }
-
-    .bottom-nav a.active {
+      margin-bottom: 1rem;
+      display: inline-block;
       color: #228be6;
-      font-weight: bold;
-      border-bottom: 2px solid #228be6;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    .back-btn:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <header>
-    <button class="back-btn" onclick="history.back()">←</button>
-    AI 감정 상담
-  </header>
+  <a class="back-btn" onclick="history.back()">← 이전으로 돌아가기</a>
 
-  <div class="chat-container">
-    <div class="chat-box" id="chat"></div>
-    <p id="typing" style="display: none">GPT가 입력 중...</p>
-    <form id="input-form">
-      <input type="text" id="message" placeholder="상담 내용을 입력하세요..." />
-      <button type="submit">보내기</button>
-    </form>
-  </div>
+  <h1>🧠 AI 감정 상담</h1>
+
+  <div class="chat-container" id="chat-box"></div>
+  <p id="typing" style="display:none">GPT가 입력 중...</p>
+
+  <form id="chat-form">
+    <input type="text" id="chat-input" placeholder="상담 내용을 입력하세요..." autocomplete="off" />
+    <button type="submit">보내기</button>
+  </form>
 
   <script type="module">
     import { supabase } from './js/supabase.js';
@@ -161,20 +118,35 @@
     import { insertBottomNav } from './js/components/nav.js';
 
     checkAuth();
-    insertBottomNav();
+    insertBottomNav(); // ✅ 네비게이션 바 삽입
 
     const params = new URLSearchParams(location.search);
     const diaryId = params.get('id');
-    const chatBox = document.getElementById('chat');
-    const input = document.getElementById('message');
-    const form = document.getElementById('input-form');
-    const typing = document.getElementById('typing');
-    const renderUrl = 'https://emotion-gpt-api.onrender.com';
+    const chatBox = document.getElementById("chat-box");
+    const input = document.getElementById("chat-input");
+    const form = document.getElementById("chat-form");
+    const typingIndicator = document.getElementById("typing");
 
+    const renderUrl = "https://emotion-gpt-api.onrender.com";
     let conversation = [];
+    let typingInterval = null;
+
+    function showTyping() {
+      typingIndicator.style.display = "block";
+      let dots = 0;
+      typingInterval = setInterval(() => {
+        dots = (dots + 1) % 4;
+        typingIndicator.textContent = "GPT가 입력 중" + ".".repeat(dots);
+      }, 400);
+    }
+
+    function hideTyping() {
+      clearInterval(typingInterval);
+      typingIndicator.style.display = "none";
+    }
 
     function addMessage(sender, text) {
-      const div = document.createElement('div');
+      const div = document.createElement("div");
       div.className = `message ${sender}`;
       div.textContent = text;
       chatBox.appendChild(div);
@@ -183,7 +155,7 @@
 
     async function addMessageToDB(role, content) {
       const { data: { user } } = await supabase.auth.getUser();
-      await supabase.from('chat_history').insert({
+      await supabase.from("chat_history").insert({
         user_id: user.id,
         diary_id: diaryId,
         role,
@@ -195,70 +167,79 @@
       const { data: { user } } = await supabase.auth.getUser();
 
       const { data } = await supabase
-        .from('chat_history')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('diary_id', diaryId)
-        .order('created_at', { ascending: true });
+        .from("chat_history")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("diary_id", diaryId)
+        .order("created_at", { ascending: true });
 
-      data.forEach((msg) => {
-        addMessage(msg.role === 'assistant' ? 'gpt' : 'user', msg.content);
-        conversation.push({ role: msg.role, content: msg.content });
-      });
-    }
-
-    async function startChat() {
-      const { data } = await supabase.from('diaries').select('*').eq('id', diaryId).single();
-      const prompt = `사용자의 일기 내용은 다음과 같습니다:\n\n"${data.content}"\n\n이 내용을 바탕으로 상담을 시작해주세요.`;
-
-      addMessage('gpt', '일기 내용을 분석 중입니다...');
-      typing.style.display = 'block';
-
-      const res = await fetch(`${renderUrl}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
-      });
-
-      const result = await res.json();
-      typing.style.display = 'none';
-
-      if (result.reply) {
-        chatBox.lastChild.textContent = result.reply;
-        await addMessageToDB('user', prompt);
-        await addMessageToDB('assistant', result.reply);
-        conversation.push({ role: 'user', content: prompt });
-        conversation.push({ role: 'assistant', content: result.reply });
+      if (data) {
+        data.forEach((msg) => {
+          addMessage(msg.role === "assistant" ? "gpt" : "user", msg.content);
+          conversation.push({ role: msg.role, content: msg.content });
+        });
       }
     }
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const msg = input.value.trim();
-      if (!msg) return;
+    async function startChat() {
+      const { data, error } = await supabase
+        .from("diaries")
+        .select("*")
+        .eq("id", diaryId)
+        .single();
 
-      addMessage('user', msg);
-      await addMessageToDB('user', msg);
-      conversation.push({ role: 'user', content: msg });
-      input.value = '';
-      typing.style.display = 'block';
+      if (error || !data) return alert("일기를 불러올 수 없습니다.");
+
+      const prompt = `사용자의 일기 내용은 다음과 같습니다:\n\n"${data.content}"\n\n이 내용을 바탕으로 부드럽게 상담을 시작해주세요.`;
+
+      addMessage("gpt", "일기 내용을 분석 중입니다...");
+      showTyping();
 
       const res = await fetch(`${renderUrl}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: [{ role: "user", content: prompt }] })
+      });
+
+      const dataJson = await res.json();
+      hideTyping();
+
+      if (dataJson.reply) {
+        chatBox.lastChild.textContent = dataJson.reply;
+        await addMessageToDB("user", prompt);
+        await addMessageToDB("assistant", dataJson.reply);
+        conversation.push({ role: "user", content: prompt });
+        conversation.push({ role: "assistant", content: dataJson.reply });
+      }
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const message = input.value.trim();
+      if (!message) return;
+
+      addMessage("user", message);
+      await addMessageToDB("user", message);
+      conversation.push({ role: "user", content: message });
+      input.value = "";
+      showTyping();
+
+      const res = await fetch(`${renderUrl}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: conversation })
       });
 
-      const result = await res.json();
-      typing.style.display = 'none';
+      const data = await res.json();
+      hideTyping();
 
-      addMessage('gpt', result.reply);
-      await addMessageToDB('assistant', result.reply);
-      conversation.push({ role: 'assistant', content: result.reply });
+      addMessage("gpt", data.reply);
+      await addMessageToDB("assistant", data.reply);
+      conversation.push({ role: "assistant", content: data.reply });
     });
 
-    loadPreviousMessages();
-    startChat();
+    await loadPreviousMessages();
+    await startChat();
   </script>
 
   <script type="module" src="./js/components/nav.js"></script>

@@ -12,81 +12,89 @@
       max-width: 700px;
       margin: auto;
       background-color: #f8f9fa;
-      padding-bottom: 80px; /* 하단 네비 */
     }
 
-    h1 {
-      text-align: center;
-      margin-bottom: 1rem;
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .logout-btn {
+      background-color: #ff6b6b;
+      border: none;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
     }
 
     .filter-bar {
       display: flex;
-      justify-content: center;
-      margin-bottom: 1.5rem;
+      align-items: center;
+      margin-bottom: 2rem;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-bar label {
+      font-weight: bold;
+      font-size: 1rem;
+      white-space: nowrap;
     }
 
     .filter-bar select {
-      padding: 0.5rem;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+      padding: 0.4rem 0.6rem;
       font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
     }
 
     .diary-card {
-      background: white;
-      border-left: 8px solid #ccc;
-      border-radius: 10px;
+      background-color: white;
+      border-left: 6px solid #228be6;
       padding: 1rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      position: relative;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
 
     .diary-card h3 {
-      margin: 0 0 0.3rem;
+      margin: 0 0 0.5rem 0;
     }
 
     .diary-card .date {
       font-size: 0.9rem;
-      color: #777;
-      margin-bottom: 0.5rem;
+      color: #888;
     }
 
     .diary-card button {
-      background-color: #22b8cf;
+      margin-top: 0.7rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      background-color: #339af0;
       color: white;
       border: none;
-      padding: 0.4rem 0.8rem;
       border-radius: 6px;
       cursor: pointer;
     }
 
-    .diary-card .delete-btn {
-      position: absolute;
-      top: 0.7rem;
-      right: 0.7rem;
-      background: #ffa8a8;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      padding: 0.3rem 0.6rem;
-      cursor: pointer;
-    }
-
-    .color-happy { border-color: #ffd43b; }
-    .color-sad { border-color: #74c0fc; }
-    .color-angry { border-color: #fa5252; }
-    .color-anxious { border-color: #868e96; }
-    .color-neutral { border-color: #ced4da; }
+    .color-happy { border-left-color: #ffd43b; }
+    .color-sad { border-left-color: #74c0fc; }
+    .color-angry { border-left-color: #fa5252; }
+    .color-anxious { border-left-color: #868e96; }
+    .color-neutral { border-left-color: #ced4da; }
   </style>
 </head>
 <body>
-  <h1>📘 내 감정 일기</h1>
+  <header>
+    <h1>📘 내 감정 일기</h1>
+    <button class="logout-btn" id="logout-btn">로그아웃</button>
+  </header>
 
   <div class="filter-bar">
-    <label for="emotion-filter" style="margin-right: 0.5rem;">감정 필터:</label>
+    <label for="emotion-filter">감정 필터</label>
     <select id="emotion-filter">
       <option value="all">전체</option>
       <option value="happy">😊 행복</option>
@@ -97,25 +105,26 @@
     </select>
   </div>
 
-  <div id="diary-list">불러오는 중...</div>
+  <div id="diary-list"></div>
 
   <script type="module">
     import { supabase } from './js/supabase.js';
-    import { checkAuth } from './js/auth.js';
     import { insertBottomNav } from './js/components/nav.js';
+    import { checkAuth } from './js/auth.js';
 
     checkAuth();
     insertBottomNav();
 
     const diaryList = document.getElementById('diary-list');
     const emotionFilter = document.getElementById('emotion-filter');
+    const logoutBtn = document.getElementById('logout-btn');
 
     const emotionMap = {
-      happy: '행복',
-      sad: '슬픔',
-      angry: '분노',
-      anxious: '불안',
-      neutral: '보통'
+      happy: '😊 행복',
+      sad: '😢 슬픔',
+      angry: '😠 분노',
+      anxious: '😟 불안',
+      neutral: '😐 보통'
     };
 
     const colorClassMap = {
@@ -130,15 +139,14 @@
 
     async function fetchDiaries() {
       const { data: { user } } = await supabase.auth.getUser();
-
       const { data, error } = await supabase
         .from('diaries')
-        .select('*')
+        .select('id, content, emotion, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
-        diaryList.innerHTML = `<p>❌ 일기 불러오기 실패: ${error.message}</p>`;
+        alert('일기 불러오기 실패: ' + error.message);
         return;
       }
 
@@ -148,12 +156,14 @@
 
     function renderDiaries() {
       const selected = emotionFilter.value;
-      const filtered = selected === 'all' ? diaries : diaries.filter(d => d.emotion === selected);
+      const filtered = selected === 'all'
+        ? diaries
+        : diaries.filter(d => d.emotion === selected);
 
       diaryList.innerHTML = '';
 
       if (filtered.length === 0) {
-        diaryList.innerHTML = '<p>작성된 일기가 없습니다.</p>';
+        diaryList.innerHTML = '<p>일기가 없습니다.</p>';
         return;
       }
 
@@ -161,39 +171,31 @@
         const card = document.createElement('div');
         card.className = `diary-card ${colorClassMap[diary.emotion] || ''}`;
 
-        const date = new Date(diary.created_at).toLocaleDateString();
         const emotionText = emotionMap[diary.emotion] || diary.emotion;
+        const date = new Date(diary.created_at).toLocaleDateString();
 
         card.innerHTML = `
-          <button class="delete-btn" data-id="${diary.id}">삭제</button>
-          <h3>${emotionText} 일기</h3>
-          <div class="date">${date}</div>
+          <h3>${emotionText}</h3>
           <p>${diary.content}</p>
-          <button onclick="location.href='diary-detail.html?id=${diary.id}'">📖 상세 보기</button>
+          <p class="date">${date}</p>
+          <button onclick="location.href='diary-detail.html?id=${diary.id}'">상세 보기</button>
         `;
 
         diaryList.appendChild(card);
-      });
-
-      document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const id = btn.dataset.id;
-          if (!confirm('정말 삭제하시겠습니까?')) return;
-
-          const { error } = await supabase.from('diaries').delete().eq('id', id);
-          if (!error) {
-            diaries = diaries.filter(d => d.id !== id);
-            renderDiaries();
-          } else {
-            alert('삭제 실패');
-          }
-        });
       });
     }
 
     emotionFilter.addEventListener('change', renderDiaries);
 
+    logoutBtn.addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      location.href = 'login.html';
+    });
+
     fetchDiaries();
   </script>
+
+  <script type="module" src="./js/components/nav.js"></script>
+  <nav-bar current="diary"></nav-bar>
 </body>
 </html>
