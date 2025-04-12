@@ -1,19 +1,38 @@
-<!-- client/signup.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>회원가입</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h2>회원가입</h2>
-  <form id="signup-form">
-    <input type="text" id="name" placeholder="이름" required><br>
-    <input type="email" id="email" placeholder="이메일" required><br>
-    <input type="password" id="password" placeholder="비밀번호" required><br>
-    <input type="text" id="phone" placeholder="전화번호" required><br>
-    <button type="submit">회원가입</button>
-  </form>
+  <h1>📋 회원가입</h1>
+
+  <div class="form-card">
+    <form id="signup-form">
+      <div class="form-group">
+        <label for="name">이름</label>
+        <input type="text" id="name" placeholder="이름 입력" required />
+      </div>
+      <div class="form-group">
+        <label for="email">이메일</label>
+        <input type="email" id="email" placeholder="example@domain.com" required />
+      </div>
+      <div class="form-group">
+        <label for="password">비밀번호</label>
+        <input type="password" id="password" placeholder="비밀번호 입력" required />
+      </div>
+      <div class="form-group">
+        <label for="phone">전화번호</label>
+        <input type="text" id="phone" placeholder="010-0000-0000" required />
+      </div>
+      <button type="submit">가입하기</button>
+    </form>
+    <div class="form-links">
+      <a href="login.html">이미 계정이 있나요? 로그인하기</a>
+    </div>
+  </div>
 
   <script type="module" src="./js/signup.js"></script>
 </body>

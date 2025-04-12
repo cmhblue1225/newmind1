@@ -6,49 +6,85 @@
   <title>일기 작성</title>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: 'Pretendard', sans-serif;
+      background: #f8f9fa;
       padding: 2rem;
-      padding-bottom: 80px;
       max-width: 600px;
       margin: auto;
+      padding-bottom: 100px;
     }
 
-    textarea, select, button {
+    h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    textarea, select {
       width: 100%;
+      padding: 0.8rem;
       margin-bottom: 1rem;
-      padding: 0.5rem;
+      border-radius: 10px;
+      border: 1px solid #ccc;
       font-size: 1rem;
+      resize: vertical;
     }
 
-    #gpt-feedback {
-      background-color: #f1f3f5;
-      padding: 1rem;
-      border-radius: 8px;
+    label {
+      font-weight: bold;
+      display: block;
+      margin: 0.5rem 0 0.3rem;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
     }
 
     button {
-      background-color: #228be6;
-      color: white;
+      padding: 0.7rem 1rem;
+      font-size: 1rem;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
+      font-weight: bold;
     }
 
-    button:hover {
-      background-color: #1971c2;
+    #analyze-btn {
+      background: #fab005;
+      color: white;
     }
 
-    h2 {
-      margin-top: 2rem;
+    #feedback-btn {
+      background: #339af0;
+      color: white;
     }
 
-    label[for="share-checkbox"] {
+    #submit-btn {
+      background: #22b8cf;
+      color: white;
+      margin-top: 1rem;
+    }
+
+    #gpt-feedback {
+      background: #fff3bf;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 1rem;
       font-size: 0.95rem;
-      display: inline-block;
-      margin-bottom: 1rem;
+      line-height: 1.5;
     }
 
-    /* ✅ 네비게이션 바 스타일 */
+    .checkbox {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+    }
+
+    /* 하단 네비게이션 바 포함 */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -70,29 +106,20 @@
       text-decoration: none;
       font-size: 1.7rem;
       color: #333;
-      transition: color 0.2s ease;
-    }
-
-    .bottom-nav a:hover {
-      color: #228be6;
     }
 
     .bottom-nav a.active {
       color: #228be6;
       font-weight: bold;
-      border-bottom: 2px solid #228be6;
     }
   </style>
 </head>
 <body>
-  <h1>오늘의 감정 일기</h1>
+  <h1>📝 오늘의 감정 일기</h1>
 
   <form id="diary-form">
     <label for="content">일기 내용</label>
     <textarea id="content" rows="8" placeholder="오늘 하루를 자유롭게 적어보세요..."></textarea>
-
-    <!-- 감정 선택 아래 → 위로 이동된 자동 분석 버튼 -->
-    <button type="button" id="analyze-btn">✍️ 감정 자동 분석</button>
 
     <label for="emotion">감정 선택</label>
     <select id="emotion">
@@ -104,17 +131,19 @@
       <option value="neutral">😐 보통</option>
     </select>
 
-    <button type="button" id="feedback-btn">💬 GPT 피드백 받기</button>
+    <div class="btn-group">
+      <button type="button" id="analyze-btn">✍️ 감정 자동 분석</button>
+      <button type="button" id="feedback-btn">💬 GPT 피드백 받기</button>
+    </div>
 
-    <label>
+    <label class="checkbox">
       <input type="checkbox" id="share-checkbox" />
       익명으로 일기를 공유하시겠습니까?
     </label>
 
-    <button type="submit">📌 일기 저장</button>
+    <button type="submit" id="submit-btn">📌 일기 저장</button>
   </form>
 
-  <h2>GPT 분석 결과</h2>
   <div id="gpt-feedback"></div>
 
   <script type="module">
@@ -131,7 +160,7 @@
     const feedbackBox = document.getElementById('gpt-feedback');
     const renderUrl = 'https://emotion-gpt-api.onrender.com';
 
-    // 감정 자동 분석 버튼
+    // 감정 자동 분석
     document.getElementById('analyze-btn').addEventListener('click', async () => {
       const content = contentInput.value.trim();
       if (!content) return alert('일기를 먼저 입력해주세요.');
@@ -145,13 +174,13 @@
       const data = await res.json();
       if (data.emotion) {
         emotionSelect.value = data.emotion;
-        feedbackBox.innerHTML = `<p>GPT 감정 분석 결과: <strong>${data.emotion}</strong></p>`;
+        feedbackBox.innerHTML = `<strong>GPT 감정 분석:</strong> ${data.emotion}`;
       } else {
         feedbackBox.innerHTML = '<p>감정 분석 실패</p>';
       }
     });
 
-    // GPT 피드백 버튼 (감정 선택은 변경하지 않음)
+    // GPT 피드백 + 음악 추천
     document.getElementById('feedback-btn').addEventListener('click', async () => {
       const content = contentInput.value.trim();
       if (!content) return alert('일기를 먼저 입력해주세요.');
@@ -164,11 +193,12 @@
 
       const data = await res.json();
 
+      // 감정 선택 값은 유지하고, 피드백만 표시
       if (data.feedback || data.music) {
         feedbackBox.innerHTML = `
-          <p><strong>GPT 분석 감정:</strong> ${data.emotion}</p>
+          <p><strong>감정 분석:</strong> ${data.emotion}</p>
           <p><strong>피드백:</strong> ${data.feedback}</p>
-          <p><a href="${data.music}" target="_blank">🎵 GPT 음악 추천 듣기</a></p>
+          <p><a href="${data.music}" target="_blank">🎵 음악 추천 듣기</a></p>
         `;
       } else {
         feedbackBox.innerHTML = '<p>GPT 피드백을 가져오지 못했습니다.</p>';
@@ -178,18 +208,16 @@
     // 일기 저장
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-
       const content = contentInput.value.trim();
       const emotion = emotionSelect.value;
       const share = document.getElementById('share-checkbox').checked;
 
       if (!content || !emotion) {
-        alert('일기 내용과 감정을 모두 입력해주세요.');
+        alert('내용과 감정을 모두 입력해주세요.');
         return;
       }
 
       const { data: { user } } = await supabase.auth.getUser();
-
       const { data: diaryData, error: diaryError } = await supabase
         .from('diaries')
         .insert({ user_id: user.id, content, emotion })
@@ -201,12 +229,12 @@
         return;
       }
 
-      // 공유 처리
+      // 공유
       if (share) {
         const feedbackText = feedbackBox.querySelector('p:nth-child(2)')?.innerText?.replace('피드백:', '').trim();
         const musicLink = feedbackBox.querySelector('a')?.href || '';
 
-        const { error: shareError } = await supabase.from('shared_diaries').insert({
+        await supabase.from('shared_diaries').insert({
           diary_id: diaryData.id,
           user_id: user.id,
           emotion,
@@ -215,12 +243,8 @@
           music: musicLink,
         });
 
-        if (shareError) {
-          alert('공유 저장 실패: ' + shareError.message);
-        }
-
         // 알림 전송
-        const { data: subscribers } = await supabase
+        const { data: subs } = await supabase
           .from('subscriptions')
           .select('follower_id')
           .eq('following_id', user.id);
@@ -228,7 +252,7 @@
         const anonId = `anon-${user.id.slice(0, 4)}`;
         const message = `익명 유저 ${anonId}가 새로운 일기를 공유했습니다.`;
 
-        const notifications = subscribers.map(sub => ({
+        const notifications = subs.map(sub => ({
           user_id: sub.follower_id,
           from_user_id: user.id,
           diary_id: diaryData.id,
@@ -236,10 +260,7 @@
         }));
 
         if (notifications.length > 0) {
-          const { error: notifError } = await supabase.from('notifications').insert(notifications);
-          if (notifError) {
-            console.error('알림 저장 실패:', notifError.message);
-          }
+          await supabase.from('notifications').insert(notifications);
         }
       }
 

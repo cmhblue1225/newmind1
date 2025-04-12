@@ -4,128 +4,104 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AI 감정 상담</title>
+  <link rel="stylesheet" href="style.css" />
   <style>
     body {
       font-family: sans-serif;
       background: #f8f9fa;
-      padding: 2rem;
+      padding: 2rem 1rem 100px;
       max-width: 600px;
       margin: auto;
-      padding-bottom: 80px;
     }
 
-    .back-btn {
-      margin-bottom: 1rem;
-      font-size: 1rem;
-      background: transparent;
-      border: none;
-      color: #339af0;
-      cursor: pointer;
-      padding: 0;
+    h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
     }
 
     .chat-box {
-      background: white;
-      border-radius: 10px;
+      background: #ffffff;
+      border: 1px solid #dee2e6;
+      border-radius: 12px;
       padding: 1rem;
       height: 400px;
       overflow-y: auto;
       margin-bottom: 1rem;
-      border: 1px solid #ccc;
       display: flex;
       flex-direction: column;
+      gap: 0.8rem;
     }
 
     .message {
-      margin-bottom: 1rem;
-      padding: 0.5rem;
-      border-radius: 6px;
-      max-width: 90%;
+      max-width: 80%;
+      padding: 0.7rem 1rem;
+      border-radius: 16px;
       word-break: break-word;
+      line-height: 1.4;
     }
 
     .user {
-      background: #e3fafc;
       align-self: flex-end;
-      text-align: right;
+      background-color: #228be6;
+      color: white;
+      border-bottom-right-radius: 0;
     }
 
     .gpt {
-      background: #f1f3f5;
       align-self: flex-start;
+      background-color: #f1f3f5;
+      border-bottom-left-radius: 0;
     }
 
     #typing {
       font-style: italic;
       color: gray;
-      margin-bottom: 1rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
     }
 
-    #input-form {
+    form {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 0.8rem;
       display: flex;
       gap: 0.5rem;
+      border-top: 1px solid #ccc;
     }
 
     input {
       flex: 1;
-      padding: 0.5rem;
+      padding: 0.6rem 1rem;
       border: 1px solid #ccc;
-      border-radius: 6px;
+      border-radius: 20px;
+      font-size: 1rem;
     }
 
     button {
-      padding: 0.5rem 1rem;
       background: #339af0;
       color: white;
       border: none;
-      border-radius: 6px;
+      padding: 0 1rem;
+      border-radius: 20px;
+      font-size: 1rem;
       cursor: pointer;
     }
 
-    /* ✅ 네비게이션 스타일 */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: #ffffff;
-      border-top: 1px solid #ccc;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      padding: 0.6rem 0;
-      z-index: 1000;
-      box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
-    }
-
-    .bottom-nav a {
-      flex: 1;
-      text-align: center;
-      text-decoration: none;
-      font-size: 1.7rem;
-      color: #333;
-      transition: color 0.2s ease;
-    }
-
-    .bottom-nav a:hover {
-      color: #228be6;
-    }
-
-    .bottom-nav a.active {
-      color: #228be6;
-      font-weight: bold;
-      border-bottom: 2px solid #228be6;
+    button:hover {
+      background: #228be6;
     }
   </style>
 </head>
 <body>
-  <!-- ✅ 뒤로가기 버튼 -->
-  <button class="back-btn" onclick="history.back()">← 뒤로가기</button>
-
-  <h1>🧠 AI 감정 상담</h1>
+  <h1>💬 AI 감정 상담</h1>
 
   <div class="chat-box" id="chat"></div>
-  <p id="typing" style="display:none">GPT가 입력 중</p>
+  <div id="typing" style="display: none">GPT가 입력 중...</div>
 
   <form id="input-form">
     <input type="text" id="message" placeholder="상담 내용을 입력하세요..." />
@@ -138,7 +114,7 @@
     import { insertBottomNav } from './js/components/nav.js';
 
     checkAuth();
-    insertBottomNav(); // ✅ 네비게이션 삽입
+    insertBottomNav();
 
     const params = new URLSearchParams(location.search);
     const diaryId = params.get('id');
@@ -149,31 +125,16 @@
 
     const renderUrl = 'https://emotion-gpt-api.onrender.com';
     let conversation = [];
-    let typingInterval = null;
-
-    function showTyping() {
-      typing.style.display = 'block';
-      let dotCount = 0;
-      typingInterval = setInterval(() => {
-        dotCount = (dotCount + 1) % 4;
-        typing.textContent = 'GPT가 입력 중' + '.'.repeat(dotCount);
-      }, 500);
-    }
-
-    function hideTyping() {
-      clearInterval(typingInterval);
-      typing.style.display = 'none';
-    }
 
     function addMessage(sender, text) {
-      const div = document.createElement('div');
-      div.className = `message ${sender}`;
-      div.innerText = text;
-      chatBox.appendChild(div);
+      const msg = document.createElement('div');
+      msg.className = `message ${sender}`;
+      msg.innerText = text;
+      chatBox.appendChild(msg);
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    async function addMessageToDB(role, content) {
+    async function addToHistory(role, content) {
       const { data: { user } } = await supabase.auth.getUser();
       await supabase.from('chat_history').insert({
         user_id: user.id,
@@ -183,32 +144,31 @@
       });
     }
 
-    async function loadPreviousMessages() {
+    async function loadHistory() {
       const { data: { user } } = await supabase.auth.getUser();
-
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('chat_history')
         .select('*')
         .eq('user_id', user.id)
         .eq('diary_id', diaryId)
-        .order('created_at', { ascending: true });
+        .order('created_at');
 
-      if (data) {
-        data.forEach((msg) => {
-          addMessage(msg.role === 'assistant' ? 'gpt' : 'user', msg.content);
-          conversation.push({ role: msg.role, content: msg.content });
-        });
-      }
+      data.forEach(m => {
+        addMessage(m.role === 'assistant' ? 'gpt' : 'user', m.content);
+        conversation.push({ role: m.role, content: m.content });
+      });
     }
 
-    async function startChat() {
-      const { data, error } = await supabase.from('diaries').select('*').eq('id', diaryId).single();
-      if (error || !data) return alert('일기를 불러올 수 없습니다.');
+    async function startChatFromDiary() {
+      const { data } = await supabase
+        .from('diaries')
+        .select('*')
+        .eq('id', diaryId)
+        .single();
 
       const prompt = `사용자의 일기 내용은 다음과 같습니다:\n\n"${data.content}"\n\n이 내용을 바탕으로 부드럽게 상담을 시작해주세요.`;
-
       addMessage('gpt', '일기 내용을 분석 중입니다...');
-      showTyping();
+      typing.style.display = 'block';
 
       const res = await fetch(`${renderUrl}/api/chat`, {
         method: 'POST',
@@ -216,16 +176,14 @@
         body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
       });
 
-      const dataJson = await res.json();
-      hideTyping();
+      const { reply } = await res.json();
+      typing.style.display = 'none';
+      chatBox.lastChild.innerText = reply;
 
-      if (dataJson.reply) {
-        chatBox.lastChild.innerText = dataJson.reply;
-        await addMessageToDB('user', prompt);
-        await addMessageToDB('assistant', dataJson.reply);
-        conversation.push({ role: 'user', content: prompt });
-        conversation.push({ role: 'assistant', content: dataJson.reply });
-      }
+      await addToHistory('user', prompt);
+      await addToHistory('assistant', reply);
+      conversation.push({ role: 'user', content: prompt });
+      conversation.push({ role: 'assistant', content: reply });
     }
 
     form.addEventListener('submit', async (e) => {
@@ -234,10 +192,10 @@
       if (!msg) return;
 
       addMessage('user', msg);
-      await addMessageToDB('user', msg);
+      await addToHistory('user', msg);
       conversation.push({ role: 'user', content: msg });
       input.value = '';
-      showTyping();
+      typing.style.display = 'block';
 
       const res = await fetch(`${renderUrl}/api/chat`, {
         method: 'POST',
@@ -245,15 +203,17 @@
         body: JSON.stringify({ messages: conversation })
       });
 
-      const dataJson = await res.json();
-      hideTyping();
-      addMessage('gpt', dataJson.reply);
-      await addMessageToDB('assistant', dataJson.reply);
-      conversation.push({ role: 'assistant', content: dataJson.reply });
+      const { reply } = await res.json();
+      typing.style.display = 'none';
+      addMessage('gpt', reply);
+      await addToHistory('assistant', reply);
+      conversation.push({ role: 'assistant', content: reply });
     });
 
-    await loadPreviousMessages();
-    await startChat();
+    await loadHistory();
+    if (conversation.length === 0) {
+      await startChatFromDiary();
+    }
   </script>
 </body>
 </html>

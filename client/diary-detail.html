@@ -6,56 +6,73 @@
   <title>일기 상세 보기</title>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: 'Pretendard', sans-serif;
+      background: #f8f9fa;
       padding: 2rem;
       max-width: 700px;
       margin: auto;
+      padding-bottom: 100px;
     }
 
     .back-btn {
+      display: inline-block;
       margin-bottom: 1rem;
-      font-size: 1rem;
-      background: transparent;
-      border: none;
       color: #339af0;
-      cursor: pointer;
-      padding: 0;
+      font-weight: bold;
+      text-decoration: none;
     }
 
     .diary-box {
-      background: #f8f9fa;
-      padding: 1rem;
-      border-radius: 10px;
+      background: #ffffff;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.05);
       margin-bottom: 1.5rem;
     }
 
-    .label { font-weight: bold; }
+    .diary-box p {
+      margin: 0.5rem 0;
+      line-height: 1.5;
+    }
+
+    .label {
+      font-weight: bold;
+    }
+
+    #feedback-box {
+      background: #fff3bf;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 2rem;
+    }
 
     .chat-btn {
-      padding: 0.7rem 1rem;
+      padding: 0.8rem 1.2rem;
       font-size: 1rem;
-      background: #22b8cf;
+      background: #339af0;
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      display: block;
+      margin: auto;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <!-- ✅ 뒤로가기 버튼 추가 -->
-  <button class="back-btn" onclick="history.back()">← 뒤로가기</button>
+  <a href="my-diary.html" class="back-btn">← 내 일기 목록으로</a>
 
-  <h1>📝 일기 상세 보기</h1>
+  <h1>📘 일기 상세</h1>
 
   <div class="diary-box">
-    <p><span class="label">작성일:</span> <span id="created-at"></span></p>
-    <p><span class="label">감정:</span> <span id="emotion"></span></p>
-    <p><span class="label">내용:</span></p>
+    <p><span class="label">🕒 작성일:</span> <span id="created-at"></span></p>
+    <p><span class="label">💬 감정:</span> <span id="emotion"></span></p>
+    <p><span class="label">📝 내용:</span></p>
     <p id="content"></p>
   </div>
 
-  <div id="feedback-box" class="diary-box" style="display:none;"></div>
+  <div id="feedback-box" style="display: none;"></div>
 
   <button class="chat-btn" id="chat-btn">💬 이 일기로 AI 상담 시작</button>
 
@@ -73,17 +90,12 @@
       if (!diaryId) return alert('일기를 찾을 수 없습니다.');
 
       const { data, error } = await supabase.from('diaries').select('*').eq('id', diaryId).single();
-
-      if (error || !data) {
-        alert('일기 불러오기 실패');
-        return;
-      }
+      if (error || !data) return alert('일기 불러오기 실패');
 
       document.getElementById('created-at').textContent = new Date(data.created_at).toLocaleString();
       document.getElementById('emotion').textContent = data.emotion;
       document.getElementById('content').textContent = data.content;
 
-      // GPT 피드백/음악 추천 요청
       const res = await fetch('https://emotion-gpt-api.onrender.com/api/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

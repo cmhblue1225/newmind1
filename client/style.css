@@ -1,3 +1,4 @@
+/* 기본 설정 */
 body {
   font-family: 'Noto Sans KR', sans-serif;
   background-color: var(--bg-color, #fff);
@@ -11,6 +12,10 @@ body {
   max-width: 600px;
   margin: auto;
   text-align: center;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
 }
 
 textarea {
@@ -19,6 +24,18 @@ textarea {
   margin-top: 10px;
   padding: 10px;
   font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  resize: vertical;
+}
+
+input, select {
+  width: 100%;
+  padding: 0.6rem;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 1rem;
 }
 
 button {
@@ -26,6 +43,15 @@ button {
   margin-top: 20px;
   font-size: 16px;
   cursor: pointer;
+  background-color: #228be6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: #1971c2;
 }
 
 .response-box {
@@ -35,7 +61,8 @@ button {
   border-radius: 10px;
 }
 
-.diary-entry {
+/* 일기 카드 디자인 */
+.diary-entry, .diary-card {
   border: 1px solid #ccc;
   padding: 1rem;
   margin-bottom: 1rem;
@@ -43,32 +70,32 @@ button {
   background-color: #f9f9f9;
 }
 
-.diary-entry.happy {
+.diary-entry.happy, .color-happy {
   border-left: 8px solid #ffd43b;
   background-color: #fffbe6;
 }
 
-.diary-entry.sad {
+.diary-entry.sad, .color-sad {
   border-left: 8px solid #74c0fc;
   background-color: #e7f5ff;
 }
 
-.diary-entry.angry {
+.diary-entry.angry, .color-angry {
   border-left: 8px solid #fa5252;
   background-color: #fff5f5;
 }
 
-.diary-entry.anxious {
+.diary-entry.anxious, .color-anxious {
   border-left: 8px solid #868e96;
   background-color: #f1f3f5;
 }
 
-.diary-entry.neutral {
+.diary-entry.neutral, .color-neutral {
   border-left: 8px solid #ced4da;
   background-color: #f8f9fa;
 }
 
-/* ✅ 하단 네비게이션 바 */
+/* 하단 네비게이션 바 */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -101,4 +128,38 @@ button {
   color: #228be6;
   font-weight: bold;
   border-bottom: 2px solid #228be6;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  body {
+    padding: 1rem;
+  }
+
+  .container, .login-container, .signup-container, .diary-container {
+    padding: 1rem;
+  }
+
+  textarea {
+    height: 120px;
+  }
+
+  .bottom-nav a {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  button {
+    font-size: 14px;
+    padding: 0.6rem 1rem;
+  }
+
+  .bottom-nav a {
+    font-size: 1.4rem;
+  }
+
+  .diary-entry {
+    font-size: 0.95rem;
+  }
 }

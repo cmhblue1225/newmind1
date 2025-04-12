@@ -3,122 +3,101 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>내 일기</title>
+  <title>내 감정 일기</title>
   <link rel="stylesheet" href="style.css" />
   <style>
     body {
       font-family: sans-serif;
-      padding: 1rem;
-      padding-bottom: 80px;
+      padding: 2rem;
+      max-width: 700px;
+      margin: auto;
+      background-color: #f8f9fa;
+      padding-bottom: 80px; /* 하단 네비 */
     }
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    h1 {
+      text-align: center;
       margin-bottom: 1rem;
+    }
+
+    .filter-bar {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .filter-bar select {
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
     }
 
     .diary-card {
-      border: 1px solid #ccc;
-      border-left: 8px solid;
+      background: white;
+      border-left: 8px solid #ccc;
       border-radius: 10px;
       padding: 1rem;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      position: relative;
     }
 
     .diary-card h3 {
-      margin: 0 0 0.5rem 0;
+      margin: 0 0 0.3rem;
     }
 
     .diary-card .date {
       font-size: 0.9rem;
-      color: #555;
+      color: #777;
+      margin-bottom: 0.5rem;
     }
 
-    .filter-bar {
-      margin-bottom: 1.5rem;
-    }
-
-    .logout-btn {
-      background-color: #f44336;
+    .diary-card button {
+      background-color: #22b8cf;
       color: white;
       border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
       cursor: pointer;
     }
 
-    .delete-btn {
-      background-color: #ddd;
+    .diary-card .delete-btn {
+      position: absolute;
+      top: 0.7rem;
+      right: 0.7rem;
+      background: #ffa8a8;
+      color: white;
       border: none;
-      padding: 0.3rem 0.7rem;
+      border-radius: 6px;
       font-size: 0.8rem;
-      border-radius: 5px;
+      padding: 0.3rem 0.6rem;
       cursor: pointer;
-      float: right;
     }
 
-    .color-happy { border-color: #fadb14; }
-    .color-sad { border-color: #1890ff; }
-    .color-angry { border-color: #ff4d4f; }
-    .color-anxious { border-color: #9254de; }
-    .color-neutral { border-color: #d9d9d9; }
-
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: #ffffff;
-      border-top: 1px solid #ccc;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      padding: 0.6rem 0;
-      z-index: 1000;
-      box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
-    }
-
-    .bottom-nav a {
-      flex: 1;
-      text-align: center;
-      text-decoration: none;
-      font-size: 1.7rem;
-      color: #333;
-      transition: color 0.2s ease;
-    }
-
-    .bottom-nav a:hover {
-      color: #228be6;
-    }
-
-    .bottom-nav a.active {
-      color: #228be6;
-      font-weight: bold;
-      border-bottom: 2px solid #228be6;
-    }
+    .color-happy { border-color: #ffd43b; }
+    .color-sad { border-color: #74c0fc; }
+    .color-angry { border-color: #fa5252; }
+    .color-anxious { border-color: #868e96; }
+    .color-neutral { border-color: #ced4da; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>내 감정 일기</h1>
-    <button class="logout-btn" id="logout-btn">로그아웃</button>
-  </header>
+  <h1>📘 내 감정 일기</h1>
 
   <div class="filter-bar">
-    <label for="emotion-filter">감정 필터:</label>
+    <label for="emotion-filter" style="margin-right: 0.5rem;">감정 필터:</label>
     <select id="emotion-filter">
       <option value="all">전체</option>
-      <option value="happy">행복</option>
-      <option value="sad">슬픔</option>
-      <option value="angry">분노</option>
-      <option value="anxious">불안</option>
-      <option value="neutral">중립</option>
+      <option value="happy">😊 행복</option>
+      <option value="sad">😢 슬픔</option>
+      <option value="angry">😠 분노</option>
+      <option value="anxious">😟 불안</option>
+      <option value="neutral">😐 보통</option>
     </select>
   </div>
 
-  <div id="diary-list"></div>
+  <div id="diary-list">불러오는 중...</div>
 
   <script type="module">
     import { supabase } from './js/supabase.js';
@@ -130,14 +109,13 @@
 
     const diaryList = document.getElementById('diary-list');
     const emotionFilter = document.getElementById('emotion-filter');
-    const logoutBtn = document.getElementById('logout-btn');
 
     const emotionMap = {
       happy: '행복',
       sad: '슬픔',
       angry: '분노',
       anxious: '불안',
-      neutral: '중립'
+      neutral: '보통'
     };
 
     const colorClassMap = {
@@ -157,10 +135,10 @@
         .from('diaries')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false }); // ✅ 최신순 정렬
+        .order('created_at', { ascending: false });
 
       if (error) {
-        alert('일기 불러오기 실패: ' + error.message);
+        diaryList.innerHTML = `<p>❌ 일기 불러오기 실패: ${error.message}</p>`;
         return;
       }
 
@@ -170,62 +148,50 @@
 
     function renderDiaries() {
       const selected = emotionFilter.value;
-
-      const filtered = selected === 'all'
-        ? diaries
-        : diaries.filter((d) => d.emotion === selected);
+      const filtered = selected === 'all' ? diaries : diaries.filter(d => d.emotion === selected);
 
       diaryList.innerHTML = '';
 
       if (filtered.length === 0) {
-        diaryList.innerHTML = '<p>일기가 없습니다.</p>';
+        diaryList.innerHTML = '<p>작성된 일기가 없습니다.</p>';
         return;
       }
 
-      filtered.forEach((diary) => {
+      filtered.forEach(diary => {
         const card = document.createElement('div');
         card.className = `diary-card ${colorClassMap[diary.emotion] || ''}`;
 
-        const emotionText = emotionMap[diary.emotion] || diary.emotion;
         const date = new Date(diary.created_at).toLocaleDateString();
+        const emotionText = emotionMap[diary.emotion] || diary.emotion;
 
         card.innerHTML = `
           <button class="delete-btn" data-id="${diary.id}">삭제</button>
           <h3>${emotionText} 일기</h3>
           <div class="date">${date}</div>
           <p>${diary.content}</p>
-          <button onclick="location.href='diary-detail.html?id=${diary.id}'">상세보기</button>
+          <button onclick="location.href='diary-detail.html?id=${diary.id}'">📖 상세 보기</button>
         `;
 
         diaryList.appendChild(card);
       });
 
-      document.querySelectorAll('.delete-btn').forEach((btn) => {
+      document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
           const id = btn.dataset.id;
-          if (confirm('정말 삭제하시겠습니까?')) {
-            const { error } = await supabase
-              .from('diaries')
-              .delete()
-              .eq('id', id);
+          if (!confirm('정말 삭제하시겠습니까?')) return;
 
-            if (error) {
-              alert('삭제 실패: ' + error.message);
-            } else {
-              diaries = diaries.filter((d) => d.id !== id);
-              renderDiaries();
-            }
+          const { error } = await supabase.from('diaries').delete().eq('id', id);
+          if (!error) {
+            diaries = diaries.filter(d => d.id !== id);
+            renderDiaries();
+          } else {
+            alert('삭제 실패');
           }
         });
       });
     }
 
     emotionFilter.addEventListener('change', renderDiaries);
-
-    logoutBtn.addEventListener('click', async () => {
-      await supabase.auth.signOut();
-      location.href = 'login.html';
-    });
 
     fetchDiaries();
   </script>

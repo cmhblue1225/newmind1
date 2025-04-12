@@ -6,35 +6,43 @@
   <title>공유 일기 커뮤니티</title>
   <style>
     body {
-      font-family: sans-serif;
-      padding: 2rem;
-      max-width: 800px;
-      margin: auto;
+      font-family: 'Pretendard', sans-serif;
       background-color: #f8f9fa;
-      padding-bottom: 80px; /* ✅ 네비게이션 바 공간 확보 */
+      padding: 2rem;
+      padding-bottom: 80px;
+      max-width: 900px;
+      margin: auto;
     }
 
     h1 {
       text-align: center;
+      margin-bottom: 1.5rem;
     }
 
-    .search-bar {
-      text-align: center;
+    .search-bar input {
+      width: 100%;
+      padding: 0.7rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
       margin-bottom: 1rem;
+      font-size: 1rem;
     }
 
     .filter-buttons {
-      text-align: center;
-      margin-bottom: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
     }
 
     .filter-buttons button {
-      margin: 0.25rem;
       padding: 0.5rem 1rem;
       border: none;
       border-radius: 6px;
       background-color: #dee2e6;
       cursor: pointer;
+      font-size: 0.95rem;
     }
 
     .filter-buttons button.active {
@@ -46,87 +54,72 @@
       background-color: white;
       border: 1px solid #ced4da;
       border-radius: 10px;
-      padding: 1rem;
+      padding: 1.2rem;
       margin-bottom: 1.5rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
     }
 
     .emotion-tag {
       font-weight: bold;
+      color: #495057;
       margin-bottom: 0.5rem;
     }
 
+    .diary-card p {
+      margin: 0.4rem 0;
+    }
+
     .music-btn {
-      margin-top: 0.5rem;
       display: inline-block;
       background: #74c0fc;
-      padding: 0.4rem 0.7rem;
+      padding: 0.4rem 0.8rem;
       border-radius: 6px;
       color: white;
       text-decoration: none;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
     }
 
     .music-btn:hover {
       background: #339af0;
     }
 
+    .action-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+    }
+
     .like-btn, .subscribe-btn {
-      margin-left: 10px;
-      background: #ffa8a8;
       border: none;
-      border-radius: 4px;
-      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.9rem;
       cursor: pointer;
+    }
+
+    .like-btn {
+      background: #ffa8a8;
+      color: white;
     }
 
     .subscribe-btn {
       background: #ffd43b;
     }
 
-    .subscribe-btn:hover {
+    .subscribe-btn[disabled] {
       background: #fab005;
-    }
-
-    /* ✅ 네비게이션 바 스타일 */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: #ffffff;
-      border-top: 1px solid #ccc;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      padding: 0.6rem 0;
-      z-index: 1000;
-      box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
-    }
-
-    .bottom-nav a {
-      flex: 1;
-      text-align: center;
-      text-decoration: none;
-      font-size: 1.7rem;
-      color: #333;
-      transition: color 0.2s ease;
-    }
-
-    .bottom-nav a:hover {
-      color: #228be6;
-    }
-
-    .bottom-nav a.active {
-      color: #228be6;
-      font-weight: bold;
-      border-bottom: 2px solid #228be6;
+      color: #444;
     }
   </style>
 </head>
 <body>
-  <h1>📘 익명 일기 커뮤니티</h1>
+  <h1>🌍 익명 일기 커뮤니티</h1>
 
   <div class="search-bar">
-    <input type="text" id="search-input" placeholder="키워드로 공유 일기 검색..." style="padding: 0.5rem; width: 80%; border-radius: 6px; border: 1px solid #ccc;" />
+    <input type="text" id="search-input" placeholder="키워드로 공유 일기 검색...">
   </div>
 
   <div class="filter-buttons">
@@ -138,7 +131,7 @@
     <button data-emotion="neutral">😐 보통</button>
   </div>
 
-  <div id="diary-list"></div>
+  <div id="diary-list">불러오는 중...</div>
 
   <script type="module">
     import { supabase } from './js/supabase.js';
@@ -146,7 +139,7 @@
     import { insertBottomNav } from './js/components/nav.js';
 
     checkAuth();
-    insertBottomNav(); // ✅ 네비게이션 바 삽입
+    insertBottomNav();
 
     const diaryList = document.getElementById('diary-list');
     const buttons = document.querySelectorAll('.filter-buttons button');
@@ -172,11 +165,6 @@
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        diaryList.innerHTML = '<p>일기를 불러오는 중 오류가 발생했습니다.</p>';
-        return;
-      }
-
       sharedDiaries = data;
       renderDiaries('all', '');
     }
@@ -184,13 +172,10 @@
     function renderDiaries(filter, keyword = '') {
       diaryList.innerHTML = '';
 
-      const keywordLower = keyword.toLowerCase();
       const filtered = sharedDiaries.filter(d => {
-        const matchesEmotion = filter === 'all' || d.emotion === filter;
-        const matchesKeyword =
-          d.content.toLowerCase().includes(keywordLower) ||
-          d.feedback.toLowerCase().includes(keywordLower);
-        return matchesEmotion && matchesKeyword;
+        const matchEmotion = filter === 'all' || d.emotion === filter;
+        const matchKeyword = d.content.toLowerCase().includes(keyword.toLowerCase()) || (d.feedback || '').toLowerCase().includes(keyword.toLowerCase());
+        return matchEmotion && matchKeyword;
       });
 
       if (filtered.length === 0) {
@@ -203,26 +188,26 @@
         card.className = 'diary-card';
 
         const anonId = `anon-${entry.user_id.slice(0, 4)}`;
-        const isOwnPost = entry.user_id === currentUserId;
         const isSubscribed = currentSubscriptions.includes(entry.user_id);
+        const isMine = entry.user_id === currentUserId;
 
         card.innerHTML = `
           <div class="emotion-tag">감정: ${entry.emotion}</div>
           <p>${entry.content}</p>
           <p><strong>GPT 피드백:</strong> ${entry.feedback}</p>
-          <a href="${entry.music}" target="_blank" class="music-btn">🎵 음악 듣기</a>
-          <p>익명 유저: <strong>${anonId}</strong></p>
-          <p>❤️ 좋아요: <span id="likes-${entry.id}">${entry.likes}</span>
-            <button class="like-btn" data-id="${entry.id}">+ 공감</button>
-            ${
-              !isOwnPost
-                ? `<button class="subscribe-btn" data-uid="${entry.user_id}" ${isSubscribed ? 'disabled' : ''}>
-                    ${isSubscribed ? '✔️ 구독 중' : '📩 구독하기'}
-                  </button>`
-                : ''
-            }
-          </p>
+          <a href="${entry.music}" class="music-btn" target="_blank">🎵 음악 듣기</a>
+          <div class="action-row">
+            <div>익명 유저: <strong>${anonId}</strong></div>
+            <div>
+              ❤️ <span id="likes-${entry.id}">${entry.likes}</span>
+              <button class="like-btn" data-id="${entry.id}">공감</button>
+              ${!isMine ? `<button class="subscribe-btn" data-uid="${entry.user_id}" ${isSubscribed ? 'disabled' : ''}>
+                ${isSubscribed ? '✔ 구독 중' : '구독하기'}
+              </button>` : ''}
+            </div>
+          </div>
         `;
+
         diaryList.appendChild(card);
       });
 
@@ -236,18 +221,15 @@
           const id = btn.dataset.id;
           btn.disabled = true;
 
-          const currentLikes = parseInt(document.getElementById(`likes-${id}`).textContent);
+          const countEl = document.getElementById(`likes-${id}`);
+          const currentLikes = parseInt(countEl.textContent);
 
           const { error } = await supabase
             .from('shared_diaries')
             .update({ likes: currentLikes + 1 })
             .eq('id', id);
 
-          if (!error) {
-            document.getElementById(`likes-${id}`).textContent = currentLikes + 1;
-          } else {
-            alert('좋아요 처리 중 오류 발생');
-          }
+          if (!error) countEl.textContent = currentLikes + 1;
         });
       });
     }
@@ -255,26 +237,21 @@
     function attachSubscribeHandlers() {
       diaryList.querySelectorAll('.subscribe-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
-          const followeeId = btn.dataset.uid;
+          const uid = btn.dataset.uid;
 
           const { error } = await supabase
             .from('subscriptions')
-            .insert({
-              follower_id: currentUserId,
-              following_id: followeeId
-            });
+            .insert({ follower_id: currentUserId, following_id: uid });
 
           if (!error) {
-            btn.textContent = '✔️ 구독 중';
+            btn.textContent = '✔ 구독 중';
             btn.disabled = true;
-          } else {
-            alert('구독 실패');
           }
         });
       });
     }
 
-    // 감정 필터 버튼
+    // 필터 버튼 이벤트
     buttons.forEach(btn => {
       btn.addEventListener('click', () => {
         buttons.forEach(b => b.classList.remove('active'));
@@ -288,7 +265,7 @@
     // 검색창 입력 시 필터링
     searchInput.addEventListener('input', () => {
       const keyword = searchInput.value.trim();
-      const activeBtn = document.querySelector('.filter-buttons button.active');
+      const activeBtn = document.querySelector('.filter-buttons .active');
       const emotion = activeBtn.dataset.emotion;
       renderDiaries(emotion, keyword);
     });
