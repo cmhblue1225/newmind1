@@ -15,5 +15,5 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
 
   // 로그인 성공 → 토큰 저장 + 페이지 이동
   localStorage.setItem('supabase_token', data.session.access_token);
-  location.href = 'my-diary.html';
+  location.href = 'dashboard.html';
 });

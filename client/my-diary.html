@@ -11,6 +11,7 @@
     body {
       font-family: sans-serif;
       padding: 1rem;
+      padding-bottom: 80px; /* ✅ 하단 네비게이션 바 공간 확보 */
     }
 
     header {
@@ -65,6 +66,41 @@
     .color-angry { border-color: #ff4d4f; }
     .color-anxious { border-color: #9254de; }
     .color-neutral { border-color: #d9d9d9; }
+
+    /* ✅ 네비게이션 바 스타일 */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #ffffff;
+      border-top: 1px solid #ccc;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0.6rem 0;
+      z-index: 1000;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+    }
+
+    .bottom-nav a {
+      flex: 1;
+      text-align: center;
+      text-decoration: none;
+      font-size: 1.7rem;
+      color: #333;
+      transition: color 0.2s ease;
+    }
+
+    .bottom-nav a:hover {
+      color: #228be6;
+    }
+
+    .bottom-nav a.active {
+      color: #228be6;
+      font-weight: bold;
+      border-bottom: 2px solid #228be6;
+    }
   </style>
 </head>
 <body>
@@ -86,5 +122,10 @@
   </div>
 
   <div id="diary-list"></div>
+
+  <script type="module">
+    import { insertBottomNav } from './js/components/nav.js';
+    insertBottomNav(); // ✅ 네비게이션 바 삽입
+  </script>
 </body>
 </html>

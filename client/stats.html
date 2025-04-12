@@ -9,6 +9,7 @@
     body {
       font-family: sans-serif;
       padding: 2rem;
+      padding-bottom: 80px; /* 하단 내비 공간 확보 */
       max-width: 700px;
       margin: auto;
       background: #f8f9fa;
@@ -34,6 +35,41 @@
     canvas {
       margin: 2rem 0;
     }
+
+    /* ✅ 네비게이션 바 스타일 */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #ffffff;
+      border-top: 1px solid #ccc;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0.6rem 0;
+      z-index: 1000;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+    }
+
+    .bottom-nav a {
+      flex: 1;
+      text-align: center;
+      text-decoration: none;
+      font-size: 1.7rem;
+      color: #333;
+      transition: color 0.2s ease;
+    }
+
+    .bottom-nav a:hover {
+      color: #228be6;
+    }
+
+    .bottom-nav a.active {
+      color: #228be6;
+      font-weight: bold;
+      border-bottom: 2px solid #228be6;
+    }
   </style>
 </head>
 <body>
@@ -54,8 +90,10 @@
   <script type="module">
     import { supabase } from './js/supabase.js';
     import { checkAuth } from './js/auth.js';
+    import { insertBottomNav } from './js/components/nav.js';
 
     checkAuth();
+    insertBottomNav(); // ✅ 네비게이션 바 삽입
 
     const emotionScores = {
       happy: 2,
@@ -80,7 +118,6 @@
         return;
       }
 
-      // 파이 차트 데이터
       const emotionCounts = { happy: 0, sad: 0, angry: 0, anxious: 0, neutral: 0 };
       data.forEach(entry => {
         if (emotionCounts[entry.emotion] !== undefined) {
@@ -113,22 +150,19 @@
         }
       });
 
-      // 날짜별 감정 흐름
       const dateMap = {};
       const weekMap = { 월: [], 화: [], 수: [], 목: [], 금: [], 토: [], 일: [] };
 
       data.forEach(entry => {
         const date = new Date(entry.created_at);
         const dateStr = date.toISOString().split('T')[0];
-        const weekday = weekDays[date.getDay() === 0 ? 6 : date.getDay() - 1]; // 월~일로 맞춤
+        const weekday = weekDays[date.getDay() === 0 ? 6 : date.getDay() - 1];
 
         const score = emotionScores[entry.emotion];
         if (score !== undefined) {
-          // 날짜별
           if (!dateMap[dateStr]) dateMap[dateStr] = [];
           dateMap[dateStr].push(score);
 
-          // 요일별
           weekMap[weekday].push(score);
         }
       });
@@ -159,7 +193,6 @@
         }
       });
 
-      // 📅 요일별 평균
       const weekLabels = weekDays;
       const weekData = weekDays.map(day => {
         const scores = weekMap[day];

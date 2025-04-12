@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Emotion Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+      background-color: #f8f9fa;
+    }
+
+    h1, h2 {
+      text-align: center;
+    }
+
+    .section {
+      background: white;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    .diary-entry {
+      border-bottom: 1px solid #eee;
+      padding: 0.5rem 0;
+    }
+
+    .diary-entry:last-child {
+      border-bottom: none;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 2rem;
+    }
+
+    .buttons a {
+      background: #339af0;
+      color: white;
+      padding: 0.7rem 1.2rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .buttons a:hover {
+      background: #1c7ed6;
+    }
+  </style>
+</head>
+<body>
+  <h1>📊 Emotion Dashboard</h1>
+
+  <div class="section" id="recent-diaries">
+    <h2>📝 최근 내 일기</h2>
+    <div id="my-diaries">불러오는 중...</div>
+  </div>
+
+  <div class="section" id="popular-diaries">
+    <h2>🔥 인기 공유 일기</h2>
+    <div id="shared-diaries">불러오는 중...</div>
+  </div>
+
+  <div class="section" id="weekly-summary">
+    <h2>🧠 GPT 주간 감정 요약</h2>
+    <div id="gpt-summary">요약 불러오는 중...</div>
+  </div>
+
+  <div class="buttons">
+    <a href="write-diary.html">✍️ 일기 쓰기</a>
+    <a href="stats.html">📈 감정 통계</a>
+    <a href="community.html">🌐 커뮤니티</a>
+  </div>
+
+  <script type="module">
+    import { supabase } from './js/supabase.js';
+    import { checkAuth } from './js/auth.js';
+
+    checkAuth();
+
+    async function loadDashboard() {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      // 최근 내 일기
+      const { data: myDiaries } = await supabase
+        .from('diaries')
+        .select('content, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      const myEl = document.getElementById('my-diaries');
+      myEl.innerHTML = myDiaries.length === 0 ? '작성된 일기가 없습니다.' :
+        myDiaries.map(d => `
+          <div class="diary-entry">
+            <div><strong>${new Date(d.created_at).toLocaleDateString()}</strong></div>
+            <div>${d.content.slice(0, 80)}...</div>
+          </div>
+        `).join('');
+
+      // 인기 공유 일기
+      const { data: shared } = await supabase
+        .from('shared_diaries')
+        .select('content, likes, created_at')
+        .order('likes', { ascending: false })
+        .limit(3);
+
+      const sharedEl = document.getElementById('shared-diaries');
+      sharedEl.innerHTML = shared.length === 0 ? '공유된 일기가 없습니다.' :
+        shared.map(d => `
+          <div class="diary-entry">
+            <div><strong>❤️ ${d.likes} · ${new Date(d.created_at).toLocaleDateString()}</strong></div>
+            <div>${d.content.slice(0, 80)}...</div>
+          </div>
+        `).join('');
+
+      // GPT 주간 요약
+      const { data: emotions } = await supabase
+        .from('diaries')
+        .select('emotion, created_at')
+        .eq('user_id', user.id);
+
+      const scores = { happy: 2, neutral: 1, anxious: 0, sad: -1, angry: -2 };
+      const weekDays = ['월', '화', '수', '목', '금', '토', '일'];
+      const weekMap = { 월: [], 화: [], 수: [], 목: [], 금: [], 토: [], 일: [] };
+
+      emotions.forEach(entry => {
+        const date = new Date(entry.created_at);
+        const weekday = weekDays[date.getDay() === 0 ? 6 : date.getDay() - 1];
+        const score = scores[entry.emotion];
+        if (score !== undefined) {
+          weekMap[weekday].push(score);
+        }
+      });
+
+      const summaryPayload = weekDays.map(day => {
+        const arr = weekMap[day];
+        const avg = arr.length ? (arr.reduce((a,b) => a+b) / arr.length).toFixed(2) : null;
+        return { date: day, score: avg };
+      });
+
+      const res = await fetch('https://emotion-gpt-api.onrender.com/api/emotion-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emotions: summaryPayload })
+      });
+
+      const result = await res.json();
+      document.getElementById('gpt-summary').innerText = result.summary || 'GPT 분석 실패';
+    }
+
+    loadDashboard();
+  </script>
+
+  <script type="module" src="./js/navbar.js"></script>
+  <nav-bar current="dashboard"></nav-bar>
+</body>
+</html>
