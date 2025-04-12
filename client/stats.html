@@ -9,13 +9,9 @@
     body {
       font-family: sans-serif;
       padding: 2rem;
-      max-width: 600px;
+      max-width: 700px;
       margin: auto;
       background: #f8f9fa;
-    }
-
-    canvas {
-      margin-top: 2rem;
     }
 
     h1, h2 {
@@ -32,7 +28,11 @@
       background: #fff3bf;
       padding: 1rem;
       border-radius: 10px;
-      margin-top: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    canvas {
+      margin: 2rem 0;
     }
   </style>
 </head>
@@ -42,10 +42,13 @@
   <div id="no-data" style="display: none;">일기 데이터가 없습니다.</div>
   <canvas id="emotionChart" style="display: none;" width="400" height="400"></canvas>
 
-  <h2 style="margin-top: 3rem;">📈 최근 감정 추이</h2>
+  <h2>📈 날짜별 감정 흐름</h2>
   <canvas id="emotionTrendChart" width="400" height="300"></canvas>
 
-  <h2 style="margin-top: 3rem;">🧠 GPT 감정 분석 요약</h2>
+  <h2>📅 요일별 감정 추이</h2>
+  <canvas id="weeklyEmotionChart" width="400" height="300"></canvas>
+
+  <h2>🧠 GPT 감정 주간 분석</h2>
   <div id="gpt-summary"></div>
 
   <script type="module">
@@ -54,23 +57,17 @@
 
     checkAuth();
 
-    const chartEl = document.getElementById('emotionChart');
-    const trendEl = document.getElementById('emotionTrendChart');
-    const noDataEl = document.getElementById('no-data');
-    const summaryBox = document.getElementById('gpt-summary');
-
-    const renderUrl = 'https://YOUR_RENDER_URL.onrender.com'; // ← 실제 Render 주소로 변경
-
-    const emotions = ['happy', 'sad', 'angry', 'anxious', 'neutral'];
-    const emotionLabels = {
-      happy: '😊 행복',
-      sad: '😢 슬픔',
-      angry: '😠 분노',
-      anxious: '😟 불안',
-      neutral: '😐 보통'
+    const emotionScores = {
+      happy: 2,
+      neutral: 1,
+      anxious: 0,
+      sad: -1,
+      angry: -2
     };
 
-    async function loadEmotionStats() {
+    const weekDays = ['월', '화', '수', '목', '금', '토', '일'];
+
+    async function loadStats() {
       const { data: { user } } = await supabase.auth.getUser();
 
       const { data, error } = await supabase
@@ -79,24 +76,25 @@
         .eq('user_id', user.id);
 
       if (error || !data || data.length === 0) {
-        noDataEl.style.display = 'block';
+        document.getElementById('no-data').style.display = 'block';
         return;
       }
 
-      // 파이 차트용
-      const counts = {};
-      emotions.forEach(e => counts[e] = 0);
+      // 파이 차트 데이터
+      const emotionCounts = { happy: 0, sad: 0, angry: 0, anxious: 0, neutral: 0 };
       data.forEach(entry => {
-        if (counts[entry.emotion] !== undefined) {
-          counts[entry.emotion]++;
+        if (emotionCounts[entry.emotion] !== undefined) {
+          emotionCounts[entry.emotion]++;
         }
       });
 
-      const chartData = emotions.map(e => counts[e]);
-      const chartLabels = emotions.map(e => emotionLabels[e]);
+      const chartData = Object.values(emotionCounts);
+      const chartLabels = Object.keys(emotionCounts).map(e => {
+        return { happy: '😊 행복', sad: '😢 슬픔', angry: '😠 분노', anxious: '😟 불안', neutral: '😐 보통' }[e];
+      });
 
-      chartEl.style.display = 'block';
-      new Chart(chartEl, {
+      document.getElementById('emotionChart').style.display = 'block';
+      new Chart(document.getElementById('emotionChart'), {
         type: 'pie',
         data: {
           labels: chartLabels,
@@ -108,84 +106,103 @@
           }]
         },
         options: {
-          responsive: true,
           plugins: {
             legend: { position: 'bottom' },
-            title: { display: true, text: '감정별 기록 비율' }
+            title: { display: true, text: '감정별 비율' }
           }
         }
       });
 
-      // 꺾은선 차트용
-      const emotionScores = { happy: 2, neutral: 1, anxious: 0, sad: -1, angry: -2 };
-      const dateEmotionMap = {};
+      // 날짜별 감정 흐름
+      const dateMap = {};
+      const weekMap = { 월: [], 화: [], 수: [], 목: [], 금: [], 토: [], 일: [] };
 
       data.forEach(entry => {
-        const dateStr = new Date(entry.created_at).toISOString().split('T')[0];
-        if (!dateEmotionMap[dateStr]) dateEmotionMap[dateStr] = [];
-        if (emotionScores[entry.emotion] !== undefined) {
-          dateEmotionMap[dateStr].push(emotionScores[entry.emotion]);
+        const date = new Date(entry.created_at);
+        const dateStr = date.toISOString().split('T')[0];
+        const weekday = weekDays[date.getDay() === 0 ? 6 : date.getDay() - 1]; // 월~일로 맞춤
+
+        const score = emotionScores[entry.emotion];
+        if (score !== undefined) {
+          // 날짜별
+          if (!dateMap[dateStr]) dateMap[dateStr] = [];
+          dateMap[dateStr].push(score);
+
+          // 요일별
+          weekMap[weekday].push(score);
         }
       });
 
-      const sortedDates = Object.keys(dateEmotionMap).sort();
-      const trendLabels = [];
-      const trendData = [];
-
+      const sortedDates = Object.keys(dateMap).sort();
+      const dateLabels = [], dateData = [];
       sortedDates.forEach(date => {
-        const scores = dateEmotionMap[date];
-        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-        trendLabels.push(date);
-        trendData.push(avg.toFixed(2));
+        const avg = dateMap[date].reduce((a, b) => a + b, 0) / dateMap[date].length;
+        dateLabels.push(date);
+        dateData.push(avg.toFixed(2));
       });
 
-      if (trendData.length > 0) {
-        new Chart(trendEl, {
-          type: 'line',
-          data: {
-            labels: trendLabels,
-            datasets: [{
-              label: '감정 점수 (2~ -2)',
-              data: trendData,
-              fill: false,
-              borderColor: '#4dabf7',
-              tension: 0.2
-            }]
-          },
-          options: {
-            responsive: true,
-            scales: {
-              y: {
-                title: { display: true, text: '감정 점수' },
-                suggestedMin: -2,
-                suggestedMax: 2
-              }
-            }
+      new Chart(document.getElementById('emotionTrendChart'), {
+        type: 'line',
+        data: {
+          labels: dateLabels,
+          datasets: [{
+            label: '날짜별 감정 점수 (2 ~ -2)',
+            data: dateData,
+            borderColor: '#4dabf7',
+            tension: 0.3
+          }]
+        },
+        options: {
+          scales: {
+            y: { suggestedMin: -2, suggestedMax: 2 }
           }
-        });
+        }
+      });
 
-        await getGPTSummary(trendData, trendLabels);
-      }
+      // 📅 요일별 평균
+      const weekLabels = weekDays;
+      const weekData = weekDays.map(day => {
+        const scores = weekMap[day];
+        return scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2) : null;
+      });
+
+      new Chart(document.getElementById('weeklyEmotionChart'), {
+        type: 'line',
+        data: {
+          labels: weekLabels,
+          datasets: [{
+            label: '요일별 감정 점수',
+            data: weekData,
+            borderColor: '#20c997',
+            tension: 0.3
+          }]
+        },
+        options: {
+          scales: {
+            y: { suggestedMin: -2, suggestedMax: 2 }
+          }
+        }
+      });
+
+      await requestWeeklySummary(weekLabels, weekData);
     }
 
-    // GPT 감정 피드백 요청
-    async function getGPTSummary(trendData, trendLabels) {
-      const recentData = trendLabels.map((date, i) => ({
-        date,
-        score: trendData[i]
-      }));
+    async function requestWeeklySummary(labels, data) {
+      const summary = labels.map((day, i) => `${day}: ${data[i]}`).join('\n');
 
-      const res = await fetch(`${renderUrl}/api/emotion-summary`, {
+      const res = await fetch('https://your-render-url.onrender.com/api/emotion-summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ emotions: recentData })
+        body: JSON.stringify({
+          emotions: labels.map((day, i) => ({ date: day, score: data[i] }))
+        })
       });
 
-      const data = await res.json();
-      summaryBox.innerText = data.summary || 'GPT 분석 실패';
+      const result = await res.json();
+      document.getElementById('gpt-summary').innerText = result.summary || 'GPT 분석 실패';
     }
 
-    loadEmotionStats();
+    loadStats();
   </script>
 </body>
 </html>

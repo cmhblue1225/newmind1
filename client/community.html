@@ -17,6 +17,11 @@
       text-align: center;
     }
 
+    .search-bar {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
     .filter-buttons {
       text-align: center;
       margin-bottom: 1rem;
@@ -41,7 +46,7 @@
       border: 1px solid #ced4da;
       border-radius: 10px;
       padding: 1rem;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
     }
 
     .emotion-tag {
@@ -62,10 +67,31 @@
     .music-btn:hover {
       background: #339af0;
     }
+
+    .like-btn, .subscribe-btn {
+      margin-left: 10px;
+      background: #ffa8a8;
+      border: none;
+      border-radius: 4px;
+      padding: 0.3rem 0.6rem;
+      cursor: pointer;
+    }
+
+    .subscribe-btn {
+      background: #ffd43b;
+    }
+
+    .subscribe-btn:hover {
+      background: #fab005;
+    }
   </style>
 </head>
 <body>
   <h1>📘 익명 일기 커뮤니티</h1>
+
+  <div class="search-bar">
+    <input type="text" id="search-input" placeholder="키워드로 공유 일기 검색..." style="padding: 0.5rem; width: 80%; border-radius: 6px; border: 1px solid #ccc;" />
+  </div>
 
   <div class="filter-buttons">
     <button data-emotion="all" class="active">전체</button>
@@ -86,9 +112,23 @@
 
     const diaryList = document.getElementById('diary-list');
     const buttons = document.querySelectorAll('.filter-buttons button');
+    const searchInput = document.getElementById('search-input');
+
     let sharedDiaries = [];
+    let currentUserId = null;
+    let currentSubscriptions = [];
 
     async function loadSharedDiaries() {
+      const { data: { user } } = await supabase.auth.getUser();
+      currentUserId = user.id;
+
+      const { data: subs } = await supabase
+        .from('subscriptions')
+        .select('following_id')
+        .eq('follower_id', currentUserId);
+
+      currentSubscriptions = subs.map(s => s.following_id);
+
       const { data, error } = await supabase
         .from('shared_diaries')
         .select('*')
@@ -100,41 +140,119 @@
       }
 
       sharedDiaries = data;
-      renderDiaries('all');
+      renderDiaries('all', '');
     }
 
-    function renderDiaries(filter) {
+    function renderDiaries(filter, keyword = '') {
       diaryList.innerHTML = '';
 
-      const filtered = filter === 'all'
-        ? sharedDiaries
-        : sharedDiaries.filter(d => d.emotion === filter);
+      const keywordLower = keyword.toLowerCase();
+      const filtered = sharedDiaries.filter(d => {
+        const matchesEmotion = filter === 'all' || d.emotion === filter;
+        const matchesKeyword =
+          d.content.toLowerCase().includes(keywordLower) ||
+          d.feedback.toLowerCase().includes(keywordLower);
+        return matchesEmotion && matchesKeyword;
+      });
 
       if (filtered.length === 0) {
-        diaryList.innerHTML = '<p>해당 감정의 일기가 없습니다.</p>';
+        diaryList.innerHTML = '<p>검색 결과가 없습니다.</p>';
         return;
       }
 
       filtered.forEach(entry => {
         const card = document.createElement('div');
         card.className = 'diary-card';
+
+        const anonId = `anon-${entry.user_id.slice(0, 4)}`;
+        const isOwnPost = entry.user_id === currentUserId;
+        const isSubscribed = currentSubscriptions.includes(entry.user_id);
+
         card.innerHTML = `
           <div class="emotion-tag">감정: ${entry.emotion}</div>
           <p>${entry.content}</p>
           <p><strong>GPT 피드백:</strong> ${entry.feedback}</p>
           <a href="${entry.music}" target="_blank" class="music-btn">🎵 음악 듣기</a>
+          <p>익명 유저: <strong>${anonId}</strong></p>
+          <p>❤️ 좋아요: <span id="likes-${entry.id}">${entry.likes}</span>
+            <button class="like-btn" data-id="${entry.id}">+ 공감</button>
+            ${
+              !isOwnPost
+                ? `<button class="subscribe-btn" data-uid="${entry.user_id}" ${isSubscribed ? 'disabled' : ''}>
+                    ${isSubscribed ? '✔️ 구독 중' : '📩 구독하기'}
+                  </button>`
+                : ''
+            }
+          </p>
         `;
         diaryList.appendChild(card);
       });
+
+      attachLikeHandlers();
+      attachSubscribeHandlers();
     }
 
+    function attachLikeHandlers() {
+      diaryList.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          btn.disabled = true;
+
+          const currentLikes = parseInt(document.getElementById(`likes-${id}`).textContent);
+
+          const { error } = await supabase
+            .from('shared_diaries')
+            .update({ likes: currentLikes + 1 })
+            .eq('id', id);
+
+          if (!error) {
+            document.getElementById(`likes-${id}`).textContent = currentLikes + 1;
+          } else {
+            alert('좋아요 처리 중 오류 발생');
+          }
+        });
+      });
+    }
+
+    function attachSubscribeHandlers() {
+      diaryList.querySelectorAll('.subscribe-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const followeeId = btn.dataset.uid;
+
+          const { error } = await supabase
+            .from('subscriptions')
+            .insert({
+              follower_id: currentUserId,
+              following_id: followeeId
+            });
+
+          if (!error) {
+            btn.textContent = '✔️ 구독 중';
+            btn.disabled = true;
+          } else {
+            alert('구독 실패');
+          }
+        });
+      });
+    }
+
+    // 감정 필터 버튼
     buttons.forEach(btn => {
       btn.addEventListener('click', () => {
         buttons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         const emotion = btn.dataset.emotion;
-        renderDiaries(emotion);
+        const keyword = searchInput.value.trim();
+        renderDiaries(emotion, keyword);
       });
+    });
+
+    // 검색창 입력 시 필터링
+    searchInput.addEventListener('input', () => {
+      const keyword = searchInput.value.trim();
+      const activeBtn = document.querySelector('.filter-buttons button.active');
+      const emotion = activeBtn.dataset.emotion;
+      renderDiaries(emotion, keyword);
     });
 
     loadSharedDiaries();
