@@ -109,7 +109,7 @@
     import { insertBottomNav } from './js/components/nav.js';
 
     checkAuth();
-    insertBottomNav(); // ✅ 네비게이션 바 삽입
+    insertBottomNav();
 
     const emailEl = document.getElementById('user-email');
     const notifToggle = document.getElementById('notification-toggle');
@@ -119,20 +119,20 @@
     const subscriptionsBox = document.getElementById('subscriptions');
 
     let currentUserId = null;
+    let currentUserEmail = null;
 
-    // 사용자 정보 로딩
     async function loadUserInfo() {
       const { data: { user } } = await supabase.auth.getUser();
       currentUserId = user.id;
+      currentUserEmail = user.email;
       emailEl.textContent = user.email;
 
-      // 구독 목록 가져오기
       const { data: subs } = await supabase
         .from('subscriptions')
         .select('following_id')
         .eq('follower_id', currentUserId);
 
-      if (subs.length === 0) {
+      if (!subs || subs.length === 0) {
         subscriptionsBox.textContent = '구독한 유저가 없습니다.';
       } else {
         subscriptionsBox.innerHTML = subs.map(s => `
@@ -141,14 +141,12 @@
       }
     }
 
-    // 알림 설정
     notifToggle.addEventListener('change', () => {
       const enabled = notifToggle.checked;
       localStorage.setItem('notifications', enabled ? 'on' : 'off');
       notifStatus.textContent = enabled ? 'On' : 'Off';
     });
 
-    // 테마 설정
     themeToggle.addEventListener('change', () => {
       const dark = themeToggle.checked;
       document.documentElement.style.setProperty('--bg-color', dark ? '#212529' : '#ffffff');
@@ -157,7 +155,6 @@
       themeStatus.textContent = dark ? 'Dark' : 'Light';
     });
 
-    // 초기 설정
     function loadSettings() {
       const notif = localStorage.getItem('notifications') || 'off';
       const theme = localStorage.getItem('theme') || 'light';
@@ -174,24 +171,30 @@
       }
     }
 
-    // 로그아웃
     document.getElementById('logout-btn').addEventListener('click', async () => {
       await supabase.auth.signOut();
       location.href = 'login.html';
     });
 
-    // 회원 탈퇴
     document.getElementById('withdraw-btn').addEventListener('click', async () => {
       const confirm = window.confirm('정말로 회원 탈퇴하시겠습니까? 모든 데이터가 삭제됩니다.');
       if (!confirm) return;
 
+      // 데이터 삭제
       await supabase.from('diaries').delete().eq('user_id', currentUserId);
       await supabase.from('shared_diaries').delete().eq('user_id', currentUserId);
       await supabase.from('chat_history').delete().eq('user_id', currentUserId);
       await supabase.from('subscriptions').delete().or(`follower_id.eq.${currentUserId},following_id.eq.${currentUserId}`);
       await supabase.from('notifications').delete().eq('user_id', currentUserId);
 
-      alert('회원 탈퇴 완료 (현재는 수동 삭제 필요)');
+      // Auth 유저 삭제 (백엔드 호출)
+      await fetch('https://emotion-gpt-api.onrender.com/api/delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: currentUserId })
+      });
+
+      alert('회원 탈퇴가 완료되었습니다.');
       location.href = 'login.html';
     });
 
