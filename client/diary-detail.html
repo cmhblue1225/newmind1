@@ -92,7 +92,10 @@
       const { data, error } = await supabase.from('diaries').select('*').eq('id', diaryId).single();
       if (error || !data) return alert('일기 불러오기 실패');
 
-      document.getElementById('created-at').textContent = new Date(data.created_at).toLocaleString();
+      const utc = new Date(data.created_at);
+      const kst = new Date(utc.getTime() + 9 * 60 * 60 * 1000);
+      document.getElementById('created-at').textContent = kst.toLocaleString('ko-KR');
+
       document.getElementById('emotion').textContent = data.emotion;
       document.getElementById('content').textContent = data.content;
 
