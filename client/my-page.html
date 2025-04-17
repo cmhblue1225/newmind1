@@ -62,6 +62,12 @@
       border-radius: 6px;
       margin: 0.3rem 0;
       display: inline-block;
+      text-decoration: none;
+      color: #000;
+    }
+
+    .user-id:hover {
+      background: #ced4da;
     }
 
     .danger {
@@ -119,12 +125,10 @@
     const subscriptionsBox = document.getElementById('subscriptions');
 
     let currentUserId = null;
-    let currentUserEmail = null;
 
     async function loadUserInfo() {
       const { data: { user } } = await supabase.auth.getUser();
       currentUserId = user.id;
-      currentUserEmail = user.email;
       emailEl.textContent = user.email;
 
       const { data: subs } = await supabase
@@ -136,7 +140,7 @@
         subscriptionsBox.textContent = '구독한 유저가 없습니다.';
       } else {
         subscriptionsBox.innerHTML = subs.map(s => `
-          <span class="user-id">anon-${s.following_id.slice(0, 4)}</span>
+          <a class="user-id" href="subscription.html?uid=${s.following_id}">anon-${s.following_id.slice(0, 4)}</a>
         `).join('');
       }
     }
@@ -180,14 +184,12 @@
       const confirm = window.confirm('정말로 회원 탈퇴하시겠습니까? 모든 데이터가 삭제됩니다.');
       if (!confirm) return;
 
-      // 데이터 삭제
       await supabase.from('diaries').delete().eq('user_id', currentUserId);
       await supabase.from('shared_diaries').delete().eq('user_id', currentUserId);
       await supabase.from('chat_history').delete().eq('user_id', currentUserId);
       await supabase.from('subscriptions').delete().or(`follower_id.eq.${currentUserId},following_id.eq.${currentUserId}`);
       await supabase.from('notifications').delete().eq('user_id', currentUserId);
 
-      // Auth 유저 삭제 (백엔드 호출)
       await fetch('https://emotion-gpt-api.onrender.com/api/delete-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

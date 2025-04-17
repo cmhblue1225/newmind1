@@ -9,7 +9,7 @@
     body {
       font-family: sans-serif;
       padding: 2rem;
-      padding-bottom: 80px; /* ✅ 네비게이션 바 공간 확보 */
+      padding-bottom: 80px;
       max-width: 800px;
       margin: auto;
       background-color: #f8f9fa;
@@ -38,6 +38,7 @@
       background-color: #dee2e6;
       cursor: pointer;
       font-size: 1rem;
+      min-width: 90px; /* ✅ 버튼 크기 통일 */
     }
 
     .filter-buttons button.active {
@@ -114,7 +115,7 @@
     import { insertBottomNav } from './js/components/nav.js';
 
     checkAuth();
-    insertBottomNav(); // ✅ 하단 네비게이션 바 삽입
+    insertBottomNav();
 
     const diaryList = document.getElementById('diary-list');
     const buttons = document.querySelectorAll('.filter-buttons button');
@@ -234,8 +235,11 @@
             });
 
           if (!error) {
-            btn.textContent = '✔️ 구독 중';
-            btn.disabled = true;
+            currentSubscriptions.push(followeeId);
+            renderDiaries(
+              document.querySelector('.filter-buttons button.active')?.dataset.emotion || 'all',
+              searchInput.value.trim()
+            );
           } else {
             alert('구독 실패');
           }
@@ -243,7 +247,6 @@
       });
     }
 
-    // 감정 필터 버튼
     buttons.forEach(btn => {
       btn.addEventListener('click', () => {
         buttons.forEach(b => b.classList.remove('active'));
@@ -254,7 +257,6 @@
       });
     });
 
-    // 검색창 입력 시 필터링
     searchInput.addEventListener('input', () => {
       const keyword = searchInput.value.trim();
       const activeBtn = document.querySelector('.filter-buttons button.active');
