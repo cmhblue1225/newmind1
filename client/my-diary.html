@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>내 감정 일기</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     body {
       font-family: sans-serif;
@@ -21,13 +22,36 @@
       margin-bottom: 1.5rem;
     }
 
-    .logout-btn {
-      background-color: #ff6b6b;
-      border: none;
+    .action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.2rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .action-bar button {
+      background-color: #228be6;
       color: white;
-      padding: 0.5rem 1rem;
+      border: none;
       border-radius: 6px;
+      padding: 0.5rem 1rem;
+      font-size: 0.95rem;
       cursor: pointer;
+    }
+
+    .date-filter-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .date-filter-container input[type="date"] {
+      padding: 0.4rem 0.6rem;
+      font-size: 0.95rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
     }
 
     .filter-bar {
@@ -41,7 +65,6 @@
     .filter-bar label {
       font-weight: bold;
       font-size: 1rem;
-      white-space: nowrap;
     }
 
     .filter-bar select {
@@ -90,8 +113,15 @@
 <body>
   <header>
     <h1>📘 내 감정 일기</h1>
-    <button class="logout-btn" id="logout-btn">로그아웃</button>
   </header>
+
+  <div class="action-bar">
+    <button onclick="location.href='write-diary.html'">+ 일기 작성하기</button>
+    <div class="date-filter-container">
+      <i class="fa-solid fa-calendar-days" style="color: #228be6;"></i>
+      <input type="date" id="date-filter" />
+    </div>
+  </div>
 
   <div class="filter-bar">
     <label for="emotion-filter">감정 필터</label>
@@ -117,7 +147,7 @@
 
     const diaryList = document.getElementById('diary-list');
     const emotionFilter = document.getElementById('emotion-filter');
-    const logoutBtn = document.getElementById('logout-btn');
+    const dateFilter = document.getElementById('date-filter');
 
     const emotionMap = {
       happy: '😊 행복',
@@ -155,10 +185,14 @@
     }
 
     function renderDiaries() {
-      const selected = emotionFilter.value;
-      const filtered = selected === 'all'
-        ? diaries
-        : diaries.filter(d => d.emotion === selected);
+      const selectedEmotion = emotionFilter.value;
+      const selectedDate = dateFilter.value;
+
+      const filtered = diaries.filter(d => {
+        const emotionMatch = selectedEmotion === 'all' || d.emotion === selectedEmotion;
+        const dateMatch = !selectedDate || d.created_at.startsWith(selectedDate);
+        return emotionMatch && dateMatch;
+      });
 
       diaryList.innerHTML = '';
 
@@ -186,11 +220,7 @@
     }
 
     emotionFilter.addEventListener('change', renderDiaries);
-
-    logoutBtn.addEventListener('click', async () => {
-      await supabase.auth.signOut();
-      location.href = 'login.html';
-    });
+    dateFilter.addEventListener('change', renderDiaries);
 
     fetchDiaries();
   </script>
