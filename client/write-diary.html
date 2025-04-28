@@ -240,18 +240,26 @@
       }
     });
 
-    // GPT 응답 텍스트 파싱
+    // GPT 응답 텍스트 파싱 (유튜브 링크 오류 수정됨)
     function parseFeedback(text) {
       const songMatch = text.match(/🎵 추천곡 제목:\s*(.*)/);
       const artistMatch = text.match(/🎤 가수:\s*(.*)/);
       const reasonMatch = text.match(/📝 추천 이유:\s*(.*)/);
       const youtubeMatch = text.match(/▶️ 유튜브 링크:\s*(.*)/);
 
+      let youtubeLink = youtubeMatch ? youtubeMatch[1].trim() : '#';
+
+      // [텍스트](링크) 형식이면 괄호 안 링크만 추출
+      const markdownLinkMatch = youtubeLink.match(/\((.*?)\)/);
+      if (markdownLinkMatch) {
+        youtubeLink = markdownLinkMatch[1];
+      }
+
       return {
         song: songMatch ? songMatch[1].trim() : '제목 없음',
         artist: artistMatch ? artistMatch[1].trim() : '가수 없음',
         reason: reasonMatch ? reasonMatch[1].trim() : '추천 이유 없음',
-        youtube: youtubeMatch ? youtubeMatch[1].trim() : '#',
+        youtube: youtubeLink,
       };
     }
 
