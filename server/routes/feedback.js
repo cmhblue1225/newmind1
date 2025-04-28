@@ -1,7 +1,7 @@
+import express from 'express';
+import { Configuration, OpenAIApi } from 'openai';
 
-const express = require('express');
 const router = express.Router();
-const { Configuration, OpenAIApi } = require('openai');
 
 // OpenAI 설정
 const configuration = new Configuration({
@@ -10,7 +10,7 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 // 피드백 요청 API
-router.post('/feedback', async (req, res) => {
+router.post('/', async (req, res) => {
   const { diaryContent, selectedEmotion } = req.body;
 
   try {
@@ -32,7 +32,7 @@ router.post('/feedback', async (req, res) => {
     `;
 
     const completion = await openai.createChatCompletion({
-      model: "gpt-4o",
+      model: "gpt-4o", // 또는 gpt-4, gpt-3.5-turbo
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
       max_tokens: 500,
