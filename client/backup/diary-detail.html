@@ -121,42 +121,5 @@
 
     loadDiary();
   </script>
-<script>
-
-// 일기 상세 페이지 로딩 시 GPT 피드백 표시
-window.addEventListener('DOMContentLoaded', () => {
-  const feedbackText = document.getElementById('gptFeedbackContent')?.innerText;
-
-  if (feedbackText) {
-    const feedbackContainer = document.getElementById('gptFeedbackContainer');
-    const parsed = parseFeedback(feedbackText);
-
-    feedbackContainer.innerHTML = `
-      <div class="music-recommendation-card">
-        <h3>🎵 추천곡: ${parsed.song}</h3>
-        <p>🎤 가수: ${parsed.artist}</p>
-        <p>📝 추천 이유: ${parsed.reason}</p>
-        <a href="${parsed.youtube}" target="_blank" class="listen-button">▶️ 유튜브에서 듣기</a>
-      </div>
-    `;
-  }
-});
-
-// GPT 응답 텍스트 파싱 함수 (write-diary.html과 동일)
-function parseFeedback(text) {
-  const songMatch = text.match(/🎵 추천곡 제목:\s*(.*)/);
-  const artistMatch = text.match(/🎤 가수:\s*(.*)/);
-  const reasonMatch = text.match(/📝 추천 이유:\s*(.*)/);
-  const youtubeMatch = text.match(/▶️ 유튜브 링크:\s*(.*)/);
-
-  return {
-    song: songMatch ? songMatch[1].trim() : '제목 없음',
-    artist: artistMatch ? artistMatch[1].trim() : '가수 없음',
-    reason: reasonMatch ? reasonMatch[1].trim() : '추천 이유 없음',
-    youtube: youtubeMatch ? youtubeMatch[1].trim() : '#',
-  };
-}
-
-</script>
 </body>
 </html>
