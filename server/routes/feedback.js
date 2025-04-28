@@ -1,59 +1,50 @@
-import express from 'express';
-import OpenAI from 'openai';
 
+const express = require('express');
 const router = express.Router();
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const { Configuration, OpenAIApi } = require('openai');
 
-router.post('/', async (req, res) => {
-  const { content } = req.body;
+// OpenAI 설정
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
 
-  if (!content) {
-    return res.status(400).json({ error: '일기 내용이 누락되었습니다.' });
-  }
+// 피드백 요청 API
+router.post('/feedback', async (req, res) => {
+  const { diaryContent, selectedEmotion } = req.body;
 
   try {
     const prompt = `
-다음은 사용자의 일기 내용입니다.
+다음 일기 내용과 감정에 맞게 감성 피드백을 작성해주고, 추천 음악 제목, 가수, 추천 이유, 유튜브 링크를 제공해줘.
+항상 아래 형식으로 답변해:
 
-"${content}"
+---
+✨ 감성 피드백: (간결한 피드백)
 
-이 일기를 바탕으로 다음을 응답하세요:
-1. 감정을 happy, sad, angry, anxious, neutral 중 하나로 분석합니다.
-2. 간단한 위로의 말 (1~2문장)
-3. 관련된 YouTube 음악 추천 (링크 포함)
+🎵 추천곡 제목: (음악 제목)
+🎤 가수: (가수 이름)
+📝 추천 이유: (추천 이유)
+▶️ 유튜브 링크: (유튜브 링크)
+---
 
-응답은 JSON 형식으로 아래처럼 해주세요:
+일기 내용: ${diaryContent}
+감정: ${selectedEmotion}
+    `;
 
-{
-  "emotion": "",
-  "feedback": "",
-  "music": "https://..."
-}
-`;
-
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: '일기를 분석하고 응원과 음악을 추천하는 따뜻하게 말하는 상담사AI입니다.' },
-        { role: 'user', content: prompt }
-      ]
+    const completion = await openai.createChatCompletion({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+      max_tokens: 500,
     });
 
-    const raw = completion.choices[0].message.content.trim();
+    const feedbackText = completion.data.choices[0].message.content;
 
-    // GPT 응답이 JSON이 아니면 파싱 에러 방지
-    let parsed = {};
-    try {
-      parsed = JSON.parse(raw);
-    } catch (e) {
-      return res.status(500).json({ error: 'GPT 응답 파싱 실패', raw });
-    }
-
-    res.json(parsed);
-  } catch (err) {
-    console.error('GPT 처리 실패:', err.message);
-    res.status(500).json({ error: '서버 오류', detail: err.message });
+    res.json({ feedback: feedbackText });
+  } catch (error) {
+    console.error('GPT feedback error:', error.response ? error.response.data : error.message);
+    res.status(500).json({ error: '피드백 생성 실패' });
   }
 });
 
-export default router;
+module.exports = router;
