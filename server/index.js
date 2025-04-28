@@ -1,10 +1,10 @@
-import express from 'express';
-import cors from 'cors';
-import analyzeRouter from './routes/analyze.js';
-import feedbackRouter from './routes/feedback.js';
-import chatRouter from './routes/chat.js';
-import emotionSummaryRouter from './routes/emotionSummary.js';
-import deleteUserRouter from './routes/deleteUser.js'; // ✅ 회원탈퇴 라우터
+const express = require('express');
+const cors = require('cors');
+const analyzeRouter = require('./routes/analyze');
+const feedbackRouter = require('./routes/feedback');
+const chatRouter = require('./routes/chat');
+const emotionSummaryRouter = require('./routes/emotionSummary');
+const deleteUserRouter = require('./routes/deleteUser'); // ✅ 회원탈퇴 라우터
 
 const app = express();
 const PORT = process.env.PORT || 3000;
