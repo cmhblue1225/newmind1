@@ -1,15 +1,12 @@
+import OpenAI from 'openai';
 import express from 'express';
-import { Configuration, OpenAIApi } from 'openai';
 
 const router = express.Router();
 
-// OpenAI 설정
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
 });
-const openai = new OpenAIApi(configuration);
 
-// 피드백 요청 API
 router.post('/', async (req, res) => {
   const { diaryContent, selectedEmotion } = req.body;
 
@@ -31,18 +28,18 @@ router.post('/', async (req, res) => {
 감정: ${selectedEmotion}
     `;
 
-    const completion = await openai.createChatCompletion({
+    const completion = await openai.chat.completions.create({
       model: "gpt-4o", // 또는 gpt-4, gpt-3.5-turbo
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
       max_tokens: 500,
     });
 
-    const feedbackText = completion.data.choices[0].message.content;
+    const feedbackText = completion.choices[0].message.content;
 
     res.json({ feedback: feedbackText });
   } catch (error) {
-    console.error('GPT feedback error:', error.response ? error.response.data : error.message);
+    console.error('GPT feedback error:', error);
     res.status(500).json({ error: '피드백 생성 실패' });
   }
 });
