@@ -10,26 +10,35 @@ const openai = new OpenAI({
 router.post('/', async (req, res) => {
   const { diaryContent, selectedEmotion } = req.body;
 
+  if (!diaryContent || !selectedEmotion) {
+    return res.status(400).json({ error: '일기 내용 또는 감정이 부족합니다.' });
+  }
+
   try {
     const prompt = `
-다음 일기 내용과 감정에 맞게 감성 피드백을 작성해주고, 추천 음악 제목, 가수, 추천 이유, 유튜브 링크를 제공해줘.
-항상 아래 형식으로 답변해:
-
----
-✨ 감성 피드백: (간결한 피드백)
-
-🎵 추천곡 제목: (음악 제목)
-🎤 가수: (가수 이름)
-📝 추천 이유: (추천 이유)
-▶️ 유튜브 링크: (유튜브 링크)
----
-
 일기 내용: ${diaryContent}
+
 감정: ${selectedEmotion}
+
+위의 일기 내용과 감정에 기반해서:
+- 간결한 감성 피드백을 작성해줘.
+- 감정에 어울리는 최신 인기곡 하나를 추천해줘.
+- 추천곡 제목, 가수 이름, 추천 이유, 유튜브 링크를 각각 명확히 구분해서 알려줘.
+
+항상 아래와 같은 형식으로 답변해:
+
+---
+✨ 감성 피드백: (텍스트)
+
+🎵 추천곡 제목: (텍스트)
+🎤 가수: (텍스트)
+📝 추천 이유: (텍스트)
+▶️ 유튜브 링크: (텍스트)
+---
     `;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o", // 또는 gpt-4, gpt-3.5-turbo
+      model: "gpt-4o",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
       max_tokens: 500,
