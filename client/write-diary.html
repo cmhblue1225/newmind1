@@ -186,7 +186,6 @@
     const feedbackBox = document.getElementById('gpt-feedback');
     const renderUrl = 'https://emotion-gpt-api.onrender.com';
 
-    // 감정 자동 분석
     document.getElementById('analyze-btn').addEventListener('click', async () => {
       const content = contentInput.value.trim();
       if (!content) return alert('일기를 먼저 입력해주세요.');
@@ -206,7 +205,6 @@
       }
     });
 
-    // GPT 피드백 + 음악 추천
     document.getElementById('feedback-btn').addEventListener('click', async () => {
       const diaryContent = contentInput.value.trim();
       const selectedEmotion = emotionSelect.value;
@@ -229,6 +227,7 @@
 
         feedbackBox.innerHTML = `
           <div class="music-recommendation-card">
+            <p><strong>✨ 감성 피드백:</strong> ${parsed.feedback}</p>
             <h3>🎵 추천곡: ${parsed.song}</h3>
             <p>🎤 가수: ${parsed.artist}</p>
             <p>📝 추천 이유: ${parsed.reason}</p>
@@ -240,22 +239,23 @@
       }
     });
 
-    // GPT 응답 텍스트 파싱 (유튜브 링크 오류 수정됨)
     function parseFeedback(text) {
+      const feedbackMatch = text.match(/✨ 감성 피드백:\s*(.*)/);
       const songMatch = text.match(/🎵 추천곡 제목:\s*(.*)/);
       const artistMatch = text.match(/🎤 가수:\s*(.*)/);
       const reasonMatch = text.match(/📝 추천 이유:\s*(.*)/);
       const youtubeMatch = text.match(/▶️ 유튜브 링크:\s*(.*)/);
 
       let youtubeLink = youtubeMatch ? youtubeMatch[1].trim() : '#';
-
-      // [텍스트](링크) 형식이면 괄호 안 링크만 추출
-      const markdownLinkMatch = youtubeLink.match(/\((.*?)\)/);
+      const markdownLinkMatch = youtubeLink.match(/\((https?:\/\/[^\s)]+)\)/);
       if (markdownLinkMatch) {
         youtubeLink = markdownLinkMatch[1];
+      } else if (!youtubeLink.startsWith('http')) {
+        youtubeLink = '#';
       }
 
       return {
+        feedback: feedbackMatch ? feedbackMatch[1].trim() : '없음',
         song: songMatch ? songMatch[1].trim() : '제목 없음',
         artist: artistMatch ? artistMatch[1].trim() : '가수 없음',
         reason: reasonMatch ? reasonMatch[1].trim() : '추천 이유 없음',
@@ -263,7 +263,6 @@
       };
     }
 
-    // 일기 저장
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const content = contentInput.value.trim();
@@ -289,7 +288,6 @@
 
       if (share) {
         const feedbackText = feedbackBox.innerText || '';
-
         await supabase.from('shared_diaries').insert({
           diary_id: diaryData.id,
           user_id: user.id,
