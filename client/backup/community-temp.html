@@ -5,21 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>공유 일기 커뮤니티</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: 'Gowun Dodum', sans-serif;
-      padding: 2rem 1rem 100px;
+      font-family: sans-serif;
+      padding: 2rem;
+      padding-bottom: 80px;
       max-width: 800px;
       margin: auto;
-      background: linear-gradient(to bottom, #e3f2fd, #f8f9fa);
+      background-color: #f8f9fa;
     }
 
     h1 {
       text-align: center;
-      margin-bottom: 1.5rem;
-      font-size: 1.8rem;
-      color: #228be6;
+      margin-bottom: 1rem;
     }
 
     .search-bar {
@@ -27,32 +25,20 @@
       margin-bottom: 1rem;
     }
 
-    .search-bar input {
-      padding: 0.5rem;
-      width: 90%;
-      max-width: 500px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 1rem;
-    }
-
     .filter-buttons {
       text-align: center;
       margin-bottom: 1.5rem;
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 0.5rem;
     }
 
     .filter-buttons button {
+      margin: 0.25rem;
       padding: 0.5rem 1rem;
       border: none;
       border-radius: 6px;
       background-color: #dee2e6;
       cursor: pointer;
       font-size: 1rem;
-      min-width: 90px;
+      min-width: 90px; /* ✅ 버튼 크기 통일 */
     }
 
     .filter-buttons button.active {
@@ -64,16 +50,13 @@
       background-color: white;
       border: 1px solid #ced4da;
       border-radius: 10px;
-      padding: 1.2rem;
+      padding: 1rem;
       margin-bottom: 1.5rem;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      animation: fadeIn 0.5s ease;
     }
 
     .emotion-tag {
       font-weight: bold;
       margin-bottom: 0.5rem;
-      color: #555;
     }
 
     .music-btn {
@@ -106,24 +89,19 @@
     .subscribe-btn:hover {
       background: #fab005;
     }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
   </style>
 </head>
 <body>
-  <h1>🌍 공유 일기 커미니티</h1>
+  <h1>🌍 공유 일기 커뮤니티</h1>
 
   <div class="search-bar">
-    <input type="text" id="search-input" placeholder="키워드로 공유 일기 검색..." />
+    <input type="text" id="search-input" placeholder="키워드로 공유 일기 검색..." style="padding: 0.5rem; width: 80%; border-radius: 6px; border: 1px solid #ccc;" />
   </div>
 
   <div class="filter-buttons">
     <button data-emotion="all" class="active">전체</button>
     <button data-emotion="happy">😊 행복</button>
-    <button data-emotion="sad">😢 슬프름</button>
+    <button data-emotion="sad">😢 슬픔</button>
     <button data-emotion="angry">😠 분노</button>
     <button data-emotion="anxious">😟 불안</button>
     <button data-emotion="neutral">😐 보통</button>
@@ -200,8 +178,8 @@
         card.innerHTML = `
           <div class="emotion-tag">감정: ${entry.emotion}</div>
           <p>${entry.content}</p>
-          <p><strong>GPT 피드벤:</strong> ${entry.feedback}</p>
-          <a href="${entry.music}" target="_blank" class="music-btn">🎵 음악 들기</a>
+          <p><strong>GPT 피드백:</strong> ${entry.feedback}</p>
+          <a href="${entry.music}" target="_blank" class="music-btn">🎵 음악 듣기</a>
           <p>익명 유저: <strong>${anonId}</strong></p>
           <p>❤️ 좋아요: <span id="likes-${entry.id}">${entry.likes}</span>
             <button class="like-btn" data-id="${entry.id}">+ 공감</button>
@@ -290,5 +268,6 @@
   </script>
 
   <script type="module" src="./js/components/nav.js"></script>
+  <nav-bar current="community"></nav-bar>
 </body>
 </html>

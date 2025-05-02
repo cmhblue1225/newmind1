@@ -5,21 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>감정 통계</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
-      font-family: 'Gowun Dodum', sans-serif;
-      padding: 2rem 1rem 100px;
+      padding-bottom: 100px;
       max-width: 800px;
       margin: auto;
-      background: linear-gradient(to bottom, #e3f2fd, #f8f9fa);
+      font-family: sans-serif;
+      background-color: #f8f9fa;
     }
 
     h1, h2 {
       text-align: center;
       margin-top: 2rem;
-      color: #228be6;
     }
 
     #gpt-summary {
@@ -27,8 +25,6 @@
       padding: 1rem;
       border-radius: 10px;
       margin-top: 1.5rem;
-      font-size: 1rem;
-      line-height: 1.6;
     }
 
     canvas {
@@ -36,17 +32,12 @@
       height: auto !important;
       max-height: 400px;
       margin: 1.5rem 0;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      padding: 1rem;
     }
 
     #no-data {
       text-align: center;
       margin-top: 2rem;
       color: gray;
-      font-size: 1.1rem;
     }
   </style>
 </head>
@@ -59,7 +50,7 @@
   <h2>📈 날짜별 감정 흐름</h2>
   <canvas id="emotionTrendChart"></canvas>
 
-  <h2>🗓️ 요일별 감정 추이</h2>
+  <h2>📅 요일별 감정 추이</h2>
   <canvas id="weeklyEmotionChart"></canvas>
 
   <h2>🧠 GPT 감정 주간 분석</h2>
@@ -221,5 +212,6 @@
   </script>
 
   <script type="module" src="./js/components/nav.js"></script>
+  <nav-bar current="stats"></nav-bar>
 </body>
 </html>
