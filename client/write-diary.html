@@ -107,14 +107,20 @@
 
     .checkbox-container {
       display: flex;
-      align-items: center;
-      gap: 0.6rem;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.3rem;
       font-size: 0.95rem;
       margin-top: 0.5rem;
     }
 
     .checkbox-container input[type="checkbox"] {
       transform: scale(1.2);
+      margin-left: 0;
+    }
+
+    .share-label {
+      margin-bottom: 0.2rem;
     }
   </style>
 </head>
@@ -141,8 +147,8 @@
     </div>
 
     <div class="checkbox-container">
+      <label for="share-checkbox" class="share-label">익명으로 일기를 공유하시겠습니까?</label>
       <input type="checkbox" id="share-checkbox" />
-      <label for="share-checkbox">익명으로 일기를 공유하시겠습니까?</label>
     </div>
 
     <button type="submit" id="submit-btn">📌 일기 저장</button>
