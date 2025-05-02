@@ -172,7 +172,7 @@
         : shared.map(d => `
           <div class="diary-entry">
             <a href="diary-detail.html?id=${d.diary_id}">
-              <div class="entry-meta">❤️ ${d.likes} · ${d.likes} \xb7 ${new Date(d.created_at).toLocaleDateString()}</div>
+              <div class="entry-meta">❤️ ${d.likes} \xb7 ${new Date(d.created_at).toLocaleDateString()}</div>
               <div class="entry-snippet">${d.content.slice(0, 80)}...</div>
             </a>
           </div>
