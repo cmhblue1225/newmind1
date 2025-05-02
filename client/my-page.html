@@ -37,24 +37,64 @@
       color: #343a40;
     }
 
-    .toggle-group {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 70px;
+      height: 34px;
     }
 
-    button {
-      padding: 0.6rem 1rem;
-      background-color: #228be6;
-      color: white;
-      border: none;
-      border-radius: 6px;
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
       cursor: pointer;
-      margin-right: 0.5rem;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 34px;
+      height: 100%;
+      width: 100%;
     }
 
-    button:hover {
-      background-color: #1864ab;
+    .slider::before {
+      content: "Off";
+      position: absolute;
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: #555;
+    }
+
+    .switch input:checked + .slider {
+      background-color: #228be6;
+    }
+
+    .switch input:checked + .slider::before {
+      transform: translateX(36px);
+      content: "On";
+      color: #228be6;
+    }
+
+    .theme-toggle .slider::before {
+      content: "Light";
+    }
+
+    .theme-toggle input:checked + .slider::before {
+      content: "Dark";
+      color: #212529;
     }
 
     #subscriptions {
@@ -97,18 +137,18 @@
 
   <div class="section">
     <label>알림 설정:</label>
-    <div class="toggle-group">
+    <label class="switch">
       <input type="checkbox" id="notification-toggle" />
-      <span id="notif-status">Off</span>
-    </div>
+      <span class="slider"></span>
+    </label>
   </div>
 
   <div class="section">
     <label>테마 설정:</label>
-    <div class="toggle-group">
+    <label class="switch theme-toggle">
       <input type="checkbox" id="theme-toggle" />
-      <span id="theme-status">Light</span>
-    </div>
+      <span class="slider"></span>
+    </label>
   </div>
 
   <div class="section">
@@ -131,9 +171,7 @@
 
     const emailEl = document.getElementById('user-email');
     const notifToggle = document.getElementById('notification-toggle');
-    const notifStatus = document.getElementById('notif-status');
     const themeToggle = document.getElementById('theme-toggle');
-    const themeStatus = document.getElementById('theme-status');
     const subscriptionsBox = document.getElementById('subscriptions');
 
     let currentUserId = null;
@@ -160,7 +198,6 @@
     notifToggle.addEventListener('change', () => {
       const enabled = notifToggle.checked;
       localStorage.setItem('notifications', enabled ? 'on' : 'off');
-      notifStatus.textContent = enabled ? 'On' : 'Off';
     });
 
     themeToggle.addEventListener('change', () => {
@@ -168,7 +205,6 @@
       document.documentElement.style.setProperty('--bg-color', dark ? '#212529' : '#ffffff');
       document.documentElement.style.setProperty('--text-color', dark ? '#f8f9fa' : '#000000');
       localStorage.setItem('theme', dark ? 'dark' : 'light');
-      themeStatus.textContent = dark ? 'Dark' : 'Light';
     });
 
     function loadSettings() {
@@ -176,10 +212,7 @@
       const theme = localStorage.getItem('theme') || 'light';
 
       notifToggle.checked = notif === 'on';
-      notifStatus.textContent = notif === 'on' ? 'On' : 'Off';
-
       themeToggle.checked = theme === 'dark';
-      themeStatus.textContent = theme === 'dark' ? 'Dark' : 'Light';
 
       if (theme === 'dark') {
         document.documentElement.style.setProperty('--bg-color', '#212529');
