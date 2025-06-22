@@ -1,6 +1,5 @@
 import express from 'express';
 import OpenAI from 'openai';
-import { validateEmotionData } from '../middleware/validation.js';
 
 const router = express.Router();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -13,26 +12,37 @@ router.get('/test', (req, res) => {
   });
 });
 
-router.post('/', validateEmotionData, async (req, res) => {
-  const { emotions } = req.body; // [{ date, score }]
+router.post('/', async (req, res) => {
+  console.log('POST /api/emotion-summary called');
+  
+  try {
+    const { emotions } = req.body;
+    console.log('Received emotion data:', emotions);
 
-  console.log('Received emotion data:', emotions);
+    // 기본 검증
+    if (!emotions || !Array.isArray(emotions)) {
+      return res.status(400).json({ error: '감정 데이터가 필요합니다.' });
+    }
 
-  // 유효한 감정 데이터만 필터링
-  const validEmotions = emotions.filter(e => 
-    e.date && 
-    e.score !== null && 
-    e.score !== undefined && 
-    !isNaN(e.score)
-  );
+    if (emotions.length === 0) {
+      return res.status(400).json({ error: '분석할 감정 데이터가 없습니다.' });
+    }
 
-  if (validEmotions.length === 0) {
-    return res.status(400).json({ error: '유효한 감정 데이터가 없습니다.' });
-  }
+    // 유효한 감정 데이터만 필터링
+    const validEmotions = emotions.filter(e => 
+      e.date && 
+      e.score !== null && 
+      e.score !== undefined && 
+      !isNaN(e.score)
+    );
 
-  const summaryText = validEmotions.map(e => `${e.date}: 감정 점수 ${e.score}`).join('\n');
+    if (validEmotions.length === 0) {
+      return res.status(400).json({ error: '유효한 감정 데이터가 없습니다.' });
+    }
 
-  const prompt = `
+    const summaryText = validEmotions.map(e => `${e.date}: 감정 점수 ${e.score}`).join('\n');
+
+    const prompt = `
 다음은 사용자의 최근 감정 흐름입니다:
 
 ${summaryText}
@@ -44,7 +54,6 @@ ${summaryText}
 - 기복이 심하다면 감정의 변화가 자연스럽다고 안심시켜주세요
 `;
 
-  try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
@@ -58,6 +67,7 @@ ${summaryText}
     const reply = completion.choices[0].message.content.trim();
     console.log('GPT summary generated:', reply);
     res.json({ summary: reply });
+    
   } catch (err) {
     console.error('GPT 피드백 오류:', err);
     res.status(500).json({ 

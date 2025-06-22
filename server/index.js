@@ -23,6 +23,29 @@ app.get('/', (req, res) => {
   res.send('🎉 newEmotionProject 백엔드 서버 작동 중입니다!');
 });
 
+// 디버깅용 라우트 목록
+app.get('/debug/routes', (req, res) => {
+  const routes = [];
+  app._router.stack.forEach((middleware) => {
+    if (middleware.route) {
+      routes.push({
+        path: middleware.route.path,
+        methods: Object.keys(middleware.route.methods)
+      });
+    } else if (middleware.name === 'router') {
+      middleware.handle.stack.forEach((handler) => {
+        if (handler.route) {
+          routes.push({
+            path: handler.route.path,
+            methods: Object.keys(handler.route.methods)
+          });
+        }
+      });
+    }
+  });
+  res.json({ routes, timestamp: new Date().toISOString() });
+});
+
 // 라우트 등록
 app.use('/api/analyze-emotion', analyzeRouter);
 app.use('/api/feedback', feedbackRouter);
