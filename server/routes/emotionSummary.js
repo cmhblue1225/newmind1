@@ -5,6 +5,14 @@ import { validateEmotionData } from '../middleware/validation.js';
 const router = express.Router();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// 테스트 엔드포인트
+router.get('/test', (req, res) => {
+  res.json({ 
+    message: 'Emotion Summary API is working',
+    hasOpenAIKey: !!process.env.OPENAI_API_KEY 
+  });
+});
+
 router.post('/', validateEmotionData, async (req, res) => {
   const { emotions } = req.body; // [{ date, score }]
 

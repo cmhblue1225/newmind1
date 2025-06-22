@@ -66,6 +66,7 @@
   <canvas id="hourlyEmotionChart"></canvas>
 
   <h2>🧠 GPT 감정 주간 분석</h2>
+  <button id="test-api" style="margin-bottom: 1rem; padding: 0.5rem 1rem; background: #339af0; color: white; border: none; border-radius: 5px; cursor: pointer;">API 테스트</button>
   <div id="gpt-summary"></div>
 
   <script type="module">
@@ -265,8 +266,18 @@
         });
 
         if (!res.ok) {
-          const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
-          throw new Error(errorData.error || `HTTP ${res.status}`);
+          let errorMessage = `HTTP ${res.status}`;
+          try {
+            const errorData = await res.json();
+            errorMessage = errorData.error || errorData.detail || errorMessage;
+            console.error('API Error Response:', errorData);
+          } catch (parseError) {
+            console.error('Failed to parse error response:', parseError);
+            const errorText = await res.text();
+            console.error('Raw error response:', errorText);
+            errorMessage = errorText || errorMessage;
+          }
+          throw new Error(errorMessage);
         }
 
         const result = await res.json();
@@ -278,6 +289,21 @@
         summaryElement.innerText = `분석 중 오류가 발생했습니다: ${error.message}`;
       }
     }
+
+    // API 테스트 함수
+    document.getElementById('test-api').addEventListener('click', async () => {
+      try {
+        console.log('Testing API...');
+        const testRes = await fetch('/api/emotion-summary/test');
+        console.log('Test response status:', testRes.status);
+        const testResult = await testRes.json();
+        console.log('Test result:', testResult);
+        alert(`API Test Result: ${JSON.stringify(testResult)}`);
+      } catch (error) {
+        console.error('API Test Error:', error);
+        alert(`API Test Error: ${error.message}`);
+      }
+    });
 
     loadStats();
   </script>
