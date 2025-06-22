@@ -48,20 +48,25 @@ router.post('/', async (req, res) => {
 ${summaryText}
 
 감정 점수는 -2(매우 부정적)부터 +2(매우 긍정적) 범위입니다.
-감정 상담사로서 사용자에게 위로와 용기, 희망을 주는 따뜻한 메시지를 2-3문장으로 작성해주세요.
+감정 상담사로서 사용자에게 위로와 용기, 희망을 주는 따뜻한 메시지를 작성해주세요.
+
+조건:
+- 정확히 2-3문장으로 작성
+- 100자 이내로 간결하게 작성
 - 긍정적인 흐름이면 격려해주세요
 - 부정적인 흐름이면 위로하고 조언해주세요  
 - 기복이 심하다면 감정의 변화가 자연스럽다고 안심시켜주세요
+- 불필요한 인사말이나 장황한 설명은 생략하고 핵심 메시지만 전달해주세요
 `;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: '당신은 전문적이고 따뜻한 감정 심리 상담사입니다.' },
+        { role: 'system', content: '당신은 전문적이고 따뜻한 감정 심리 상담사입니다. 항상 간결하고 핵심적인 메시지를 전달합니다.' },
         { role: 'user', content: prompt }
       ],
       temperature: 0.7,
-      max_tokens: 200
+      max_tokens: 120
     });
 
     const reply = completion.choices[0].message.content.trim();

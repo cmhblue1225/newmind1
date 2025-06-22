@@ -29,6 +29,10 @@
       margin-top: 1.5rem;
       font-size: 1rem;
       line-height: 1.6;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: keep-all;
     }
 
     canvas {
@@ -66,7 +70,6 @@
   <canvas id="hourlyEmotionChart"></canvas>
 
   <h2>🧠 GPT 감정 주간 분석</h2>
-  <button id="test-api" style="margin-bottom: 1rem; padding: 0.5rem 1rem; background: #339af0; color: white; border: none; border-radius: 5px; cursor: pointer;">API 테스트</button>
   <div id="gpt-summary"></div>
 
   <script type="module">
@@ -279,29 +282,6 @@
         summaryElement.innerText = `분석 중 오류가 발생했습니다: ${error.message}`;
       }
     }
-
-    // API 테스트 함수
-    document.getElementById('test-api').addEventListener('click', async () => {
-      try {
-        console.log('Testing API...');
-        const testRes = await fetch('https://emotion-gpt-api.onrender.com/api/emotion-summary/test');
-        console.log('Test response status:', testRes.status);
-        
-        const responseText = await testRes.text();
-        console.log('Raw response:', responseText);
-        
-        if (!testRes.ok) {
-          throw new Error(`HTTP ${testRes.status}: ${responseText}`);
-        }
-        
-        const testResult = JSON.parse(responseText);
-        console.log('Test result:', testResult);
-        alert(`API Test Result: ${JSON.stringify(testResult)}`);
-      } catch (error) {
-        console.error('API Test Error:', error);
-        alert(`API Test Error: ${error.message}`);
-      }
-    });
 
     loadStats();
   </script>
