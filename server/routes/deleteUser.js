@@ -5,7 +5,7 @@ const router = express.Router();
 
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE // Render 환경 변수에서 설정
+  process.env.SUPABASE_SERVICE_KEY // Render 환경 변수에서 설정
 );
 
 router.post('/', async (req, res) => {
