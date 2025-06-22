@@ -259,7 +259,7 @@
 
         console.log('Sending emotion data:', validEmotions);
 
-        const res = await fetch('/api/emotion-summary', {
+        const res = await fetch('https://emotion-gpt-api.onrender.com/api/emotion-summary', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ emotions: validEmotions })
@@ -294,7 +294,7 @@
     document.getElementById('test-api').addEventListener('click', async () => {
       try {
         console.log('Testing API...');
-        const testRes = await fetch('/api/emotion-summary/test');
+        const testRes = await fetch('https://emotion-gpt-api.onrender.com/api/emotion-summary/test');
         console.log('Test response status:', testRes.status);
         const testResult = await testRes.json();
         console.log('Test result:', testResult);

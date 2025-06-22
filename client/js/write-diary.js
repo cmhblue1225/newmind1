@@ -11,7 +11,7 @@ analyzeBtn.addEventListener('click', async () => {
   const content = document.getElementById('content').value.trim();
   if (!content) return alert('일기 내용을 먼저 입력해주세요.');
 
-  const res = await fetch('/api/analyze-emotion', {
+  const res = await fetch('https://emotion-gpt-api.onrender.com/api/analyze-emotion', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ content })

@@ -4,7 +4,7 @@ import { safeApiCall } from './errorHandler.js';
 // Base API URL (개발환경과 프로덕션환경 구분)
 const API_BASE = window.location.hostname === 'localhost' 
   ? 'http://localhost:3000/api' 
-  : '/api';
+  : 'https://emotion-gpt-api.onrender.com/api';
 
 // 공통 fetch 옵션
 const getDefaultOptions = () => ({
