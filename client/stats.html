@@ -247,43 +247,33 @@
       summaryElement.innerText = '분석 중...';
 
       try {
-        // null 값 제거 및 유효한 데이터만 필터링
-        const validEmotions = labels
-          .map((day, i) => ({ date: day, score: data[i] }))
-          .filter(emotion => emotion.score !== null && emotion.score !== undefined);
+        // dashboard.html과 동일한 방식으로 데이터 준비
+        const summaryPayload = labels.map((day, i) => {
+          const score = data[i];
+          return { date: day, score: score };
+        }).filter(emotion => emotion.score !== null && emotion.score !== undefined);
 
-        if (validEmotions.length === 0) {
+        if (summaryPayload.length === 0) {
           summaryElement.innerText = '분석할 감정 데이터가 부족합니다. 더 많은 일기를 작성해보세요.';
           return;
         }
 
-        console.log('Sending emotion data:', validEmotions);
+        console.log('Sending emotion data:', summaryPayload);
 
         const res = await fetch('https://emotion-gpt-api.onrender.com/api/emotion-summary', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ emotions: validEmotions })
+          body: JSON.stringify({ emotions: summaryPayload })
         });
 
         if (!res.ok) {
-          let errorMessage = `HTTP ${res.status}`;
-          try {
-            const errorData = await res.json();
-            errorMessage = errorData.error || errorData.detail || errorMessage;
-            console.error('API Error Response:', errorData);
-          } catch (parseError) {
-            console.error('Failed to parse error response:', parseError);
-            const errorText = await res.text();
-            console.error('Raw error response:', errorText);
-            errorMessage = errorText || errorMessage;
-          }
-          throw new Error(errorMessage);
+          throw new Error(`API Error: ${res.status}`);
         }
 
         const result = await res.json();
         console.log('GPT summary result:', result);
         
-        summaryElement.innerText = result.summary || 'GPT 분석을 완료했지만 결과가 없습니다.';
+        summaryElement.innerText = result.summary || 'GPT 분석 결과가 없습니다.';
       } catch (error) {
         console.error('GPT 주간 분석 오류:', error);
         summaryElement.innerText = `분석 중 오류가 발생했습니다: ${error.message}`;
@@ -296,7 +286,15 @@
         console.log('Testing API...');
         const testRes = await fetch('https://emotion-gpt-api.onrender.com/api/emotion-summary/test');
         console.log('Test response status:', testRes.status);
-        const testResult = await testRes.json();
+        
+        const responseText = await testRes.text();
+        console.log('Raw response:', responseText);
+        
+        if (!testRes.ok) {
+          throw new Error(`HTTP ${testRes.status}: ${responseText}`);
+        }
+        
+        const testResult = JSON.parse(responseText);
         console.log('Test result:', testResult);
         alert(`API Test Result: ${JSON.stringify(testResult)}`);
       } catch (error) {
