@@ -8,31 +8,54 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 router.post('/', validateEmotionData, async (req, res) => {
   const { emotions } = req.body; // [{ date, score }]
 
-  const summaryText = emotions.map(e => `${e.date}: 감정 점수 ${e.score}`).join('\n');
+  console.log('Received emotion data:', emotions);
+
+  // 유효한 감정 데이터만 필터링
+  const validEmotions = emotions.filter(e => 
+    e.date && 
+    e.score !== null && 
+    e.score !== undefined && 
+    !isNaN(e.score)
+  );
+
+  if (validEmotions.length === 0) {
+    return res.status(400).json({ error: '유효한 감정 데이터가 없습니다.' });
+  }
+
+  const summaryText = validEmotions.map(e => `${e.date}: 감정 점수 ${e.score}`).join('\n');
 
   const prompt = `
 다음은 사용자의 최근 감정 흐름입니다:
 
 ${summaryText}
 
-감정 상담사로써 사용자에게 위로와 용기, 즐거움을 줘야 합니다. 이 감정 흐름을 분석해서 2~3문장으로 부드럽게 피드백을 해주세요.
-예: 감정이 기복이 심하다면 위로하거나 조언해주세요.
+감정 점수는 -2(매우 부정적)부터 +2(매우 긍정적) 범위입니다.
+감정 상담사로서 사용자에게 위로와 용기, 희망을 주는 따뜻한 메시지를 2-3문장으로 작성해주세요.
+- 긍정적인 흐름이면 격려해주세요
+- 부정적인 흐름이면 위로하고 조언해주세요  
+- 기복이 심하다면 감정의 변화가 자연스럽다고 안심시켜주세요
 `;
 
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: '감정 심리 상담사입니다.' },
+        { role: 'system', content: '당신은 전문적이고 따뜻한 감정 심리 상담사입니다.' },
         { role: 'user', content: prompt }
-      ]
+      ],
+      temperature: 0.7,
+      max_tokens: 200
     });
 
     const reply = completion.choices[0].message.content.trim();
+    console.log('GPT summary generated:', reply);
     res.json({ summary: reply });
   } catch (err) {
-    console.error('GPT 피드백 오류:', err.message);
-    res.status(500).json({ error: 'GPT 처리 실패', detail: err.message });
+    console.error('GPT 피드백 오류:', err);
+    res.status(500).json({ 
+      error: 'GPT 분석 중 오류가 발생했습니다.', 
+      detail: process.env.NODE_ENV === 'development' ? err.message : undefined 
+    });
   }
 });
 

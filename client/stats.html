@@ -242,16 +242,41 @@
     }
 
     async function requestWeeklySummary(labels, data) {
-      const res = await fetch('/api/emotion-summary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          emotions: labels.map((day, i) => ({ date: day, score: data[i] }))
-        })
-      });
+      const summaryElement = document.getElementById('gpt-summary');
+      summaryElement.innerText = '분석 중...';
 
-      const result = await res.json();
-      document.getElementById('gpt-summary').innerText = result.summary || 'GPT 분석 실패';
+      try {
+        // null 값 제거 및 유효한 데이터만 필터링
+        const validEmotions = labels
+          .map((day, i) => ({ date: day, score: data[i] }))
+          .filter(emotion => emotion.score !== null && emotion.score !== undefined);
+
+        if (validEmotions.length === 0) {
+          summaryElement.innerText = '분석할 감정 데이터가 부족합니다. 더 많은 일기를 작성해보세요.';
+          return;
+        }
+
+        console.log('Sending emotion data:', validEmotions);
+
+        const res = await fetch('/api/emotion-summary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ emotions: validEmotions })
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(errorData.error || `HTTP ${res.status}`);
+        }
+
+        const result = await res.json();
+        console.log('GPT summary result:', result);
+        
+        summaryElement.innerText = result.summary || 'GPT 분석을 완료했지만 결과가 없습니다.';
+      } catch (error) {
+        console.error('GPT 주간 분석 오류:', error);
+        summaryElement.innerText = `분석 중 오류가 발생했습니다: ${error.message}`;
+      }
     }
 
     loadStats();
